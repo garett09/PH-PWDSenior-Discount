@@ -519,44 +519,31 @@ export function DiscountCalculator() {
       {/* Tutorial Overlay */}
       {showTutorial && (
         <>
-          {/* Spotlight Effect - Dark overlay with cutout for highlighted element */}
-          <div className="fixed inset-0 z-40 pointer-events-none">
-            <svg className="w-full h-full" style={{ position: 'absolute', top: 0, left: 0 }}>
-              <defs>
-                <mask id="spotlight-mask">
-                  <rect x="0" y="0" width="100%" height="100%" fill="white" />
-                  {highlightedElement && (() => {
-                    const rect = highlightedElement.getBoundingClientRect()
-                    const padding = 8
-                    return (
-                      <rect
-                        x={rect.x - padding}
-                        y={rect.y - padding}
-                        width={rect.width + padding * 2}
-                        height={rect.height + padding * 2}
-                        rx="12"
-                        fill="black"
-                      />
-                    )
-                  })()}
-                </mask>
-              </defs>
-              <rect
-                x="0"
-                y="0"
-                width="100%"
-                height="100%"
-                fill="rgba(0, 0, 0, 0.7)"
-                mask="url(#spotlight-mask)"
-              />
-            </svg>
-            {/* Highlighted element border ring */}
-            {highlightedElement && (() => {
-              const rect = highlightedElement.getBoundingClientRect()
-              const padding = 8
-              return (
+          {/* Dark Backdrop */}
+          <div className="fixed inset-0 bg-black/70 z-40 pointer-events-none" />
+          
+          {/* Highlighted Element Spotlight */}
+          {highlightedElement && (() => {
+            const rect = highlightedElement.getBoundingClientRect()
+            const padding = 8
+            
+            return (
+              <>
+                {/* White spotlight background */}
                 <div
-                  className="absolute border-4 border-blue-500 rounded-xl shadow-2xl animate-pulse"
+                  className="fixed z-40 pointer-events-none bg-white rounded-xl"
+                  style={{
+                    top: `${rect.y - padding}px`,
+                    left: `${rect.x - padding}px`,
+                    width: `${rect.width + padding * 2}px`,
+                    height: `${rect.height + padding * 2}px`,
+                    transition: 'all 0.3s ease-in-out',
+                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)'
+                  }}
+                />
+                {/* Animated border ring */}
+                <div
+                  className="fixed z-50 pointer-events-none border-4 border-blue-500 rounded-xl animate-pulse"
                   style={{
                     top: `${rect.y - padding}px`,
                     left: `${rect.x - padding}px`,
@@ -565,9 +552,9 @@ export function DiscountCalculator() {
                     transition: 'all 0.3s ease-in-out'
                   }}
                 />
-              )
-            })()}
-          </div>
+              </>
+            )
+          })()}
           
           {/* Tutorial Modal */}
           <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 pointer-events-none">

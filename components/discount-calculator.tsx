@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calculator, ShoppingCart, Utensils, Info, Receipt, Users, Percent, Sparkles, ExternalLink, Scale, FileText, X, RotateCcw, Copy, Check, ChevronDown, ChevronUp, Save, Clock, Share2, HelpCircle, ArrowRight, ArrowLeft } from 'lucide-react'
+import { Calculator, ShoppingCart, Utensils, Info, Receipt, Users, Percent, Sparkles, ExternalLink, Scale, FileText, X, RotateCcw, Copy, Check, ChevronDown, ChevronUp, Save, Clock, Share2 } from 'lucide-react'
 import { saveCalculation, getSavedCalculations, deleteCalculation, formatCalculationForSharing, type SavedCalculation } from '@/lib/storage-utils'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -120,11 +120,6 @@ export function DiscountCalculator() {
   // Simple/Advanced Mode
   const [isAdvancedMode, setIsAdvancedMode] = useState(false)
   
-  // Tutorial State
-  const [showTutorial, setShowTutorial] = useState(false)
-  const [tutorialStep, setTutorialStep] = useState(0)
-  const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null)
-  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
   
   // Receipt Matching State
   const [receiptMatchMode, setReceiptMatchMode] = useState(false)
@@ -142,138 +137,6 @@ export function DiscountCalculator() {
     return value.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })
   }
 
-  // Check if user has seen tutorial on mount
-  useEffect(() => {
-    const hasSeenTutorial = localStorage.getItem('hasSeenTutorial')
-    if (!hasSeenTutorial) {
-      setShowTutorial(true)
-    }
-  }, [])
-
-  // Highlight element when tutorial step changes
-  useEffect(() => {
-    if (!showTutorial) {
-      setHighlightedElement(null)
-      setHighlightRect(null)
-      return
-    }
-
-    const steps = getTutorialSteps()
-    const currentStep = steps[tutorialStep]
-    
-    if (currentStep.highlight) {
-      // Find element with data-tutorial-id attribute
-      const element = document.querySelector(`[data-tutorial-id="${currentStep.highlight}"]`) as HTMLElement
-      if (element) {
-        setHighlightedElement(element)
-        
-        // Update rect and scroll
-        const updateRect = () => {
-          const rect = element.getBoundingClientRect()
-          setHighlightRect(rect)
-        }
-        
-        // Initial update
-        setTimeout(() => {
-          updateRect()
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' })
-          // Update rect after scroll completes
-          setTimeout(updateRect, 500)
-        }, 100)
-        
-        // Update on resize
-        window.addEventListener('resize', updateRect)
-        window.addEventListener('scroll', updateRect, true)
-        
-        return () => {
-          window.removeEventListener('resize', updateRect)
-          window.removeEventListener('scroll', updateRect, true)
-        }
-      } else {
-        setHighlightedElement(null)
-        setHighlightRect(null)
-      }
-    } else {
-      setHighlightedElement(null)
-      setHighlightRect(null)
-    }
-  }, [showTutorial, tutorialStep, isAdvancedMode])
-
-  const markTutorialAsSeen = () => {
-    localStorage.setItem('hasSeenTutorial', 'true')
-    setShowTutorial(false)
-    setTutorialStep(0)
-  }
-
-  const skipTutorial = () => {
-    markTutorialAsSeen()
-  }
-
-  const startTutorial = () => {
-    setTutorialStep(0)
-    setShowTutorial(true)
-  }
-
-  const nextTutorialStep = () => {
-    const maxSteps = isAdvancedMode ? 7 : 5
-    if (tutorialStep < maxSteps - 1) {
-      setTutorialStep(tutorialStep + 1)
-    } else {
-      markTutorialAsSeen()
-    }
-  }
-
-  const prevTutorialStep = () => {
-    if (tutorialStep > 0) {
-      setTutorialStep(tutorialStep - 1)
-    }
-  }
-
-  // Define tutorial steps
-  const getTutorialSteps = () => {
-    const baseSteps = [
-      {
-        title: "Welcome to DiscountPH! 🎉",
-        description: "This calculator helps you compute discounts for PWDs and Senior Citizens in the Philippines. Let's take a quick tour!",
-        highlight: null
-      },
-      {
-        title: "Choose Your Mode",
-        description: "Start with Simple Mode for quick calculations, or switch to Advanced Mode for features like separate PWD orders and manual service charge verification.",
-        highlight: "mode-toggle"
-      },
-      {
-        title: "Enter Bill Amount",
-        description: "Enter the total amount shown on your receipt. This is the starting point for all calculations.",
-        highlight: "bill-amount"
-      },
-      {
-        title: "Group Dining?",
-        description: "Toggle this ON if you're splitting the bill with others (both PWD/Senior and regular diners). Leave it OFF for single PWD/Senior purchases.",
-        highlight: "group-toggle"
-      },
-      {
-        title: "Calculate Your Discount",
-        description: "Click Calculate to see your breakdown! You'll get a detailed summary showing VAT exemption, 20% discount, and service charge exemption (if applicable).",
-        highlight: "calculate-button"
-      }
-    ]
-
-    const advancedSteps = [
-      {
-        title: "Advanced Options",
-        description: "Use this to handle 'Mixed Transactions' where the PWD ordered expensive items separately. Enter the PWD-only items for maximum discount accuracy.",
-        highlight: "advanced-options"
-      },
-      {
-        title: "Service Charge Details",
-        description: "In Advanced Mode, you can choose how the service charge was calculated, exclude certain items, or enter the exact amount from your receipt.",
-        highlight: "service-charge"
-      }
-    ]
-
-    return isAdvancedMode ? [...baseSteps, ...advancedSteps] : baseSteps
-  }
 
   const copyToClipboard = async (text: string, id: string) => {
     try {
@@ -539,124 +402,6 @@ export function DiscountCalculator() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      {/* Tutorial Overlay */}
-      {showTutorial && (
-        <>
-          {/* Dark Backdrop */}
-          <div className="fixed inset-0 bg-black/70 z-40 pointer-events-none" />
-          
-          {/* Highlighted Element Spotlight */}
-          {highlightRect && (() => {
-            const padding = 8
-            
-            return (
-              <>
-                {/* White spotlight background */}
-                <div
-                  className="fixed z-[45] pointer-events-none bg-white rounded-xl"
-                  style={{
-                    top: `${highlightRect.top - padding}px`,
-                    left: `${highlightRect.left - padding}px`,
-                    width: `${highlightRect.width + padding * 2}px`,
-                    height: `${highlightRect.height + padding * 2}px`,
-                    transition: 'all 0.3s ease-in-out',
-                    boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)'
-                  }}
-                />
-                {/* Animated border ring */}
-                <div
-                  className="fixed z-50 pointer-events-none border-4 border-blue-500 rounded-xl"
-                  style={{
-                    top: `${highlightRect.top - padding}px`,
-                    left: `${highlightRect.left - padding}px`,
-                    width: `${highlightRect.width + padding * 2}px`,
-                    height: `${highlightRect.height + padding * 2}px`,
-                    transition: 'all 0.3s ease-in-out',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-                  }}
-                />
-              </>
-            )
-          })()}
-          
-          {/* Tutorial Modal */}
-          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-4 pointer-events-none">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in zoom-in-95 slide-in-from-bottom-4 pointer-events-auto">
-            {(() => {
-              const steps = getTutorialSteps()
-              const currentStep = steps[tutorialStep]
-              
-              return (
-                <>
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-blue-100">
-                        <HelpCircle className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-bold text-slate-900">{currentStep.title}</h2>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Step {tutorialStep + 1} of {steps.length}
-                        </p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={skipTutorial}
-                      className="text-slate-400 hover:text-slate-600 transition-colors p-2 -mt-2 -mr-2"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  
-                  <div className="mb-6">
-                    <p className="text-slate-700 leading-relaxed">{currentStep.description}</p>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="mb-6">
-                    <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 transition-all duration-300"
-                        style={{ width: `${((tutorialStep + 1) / steps.length) * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  {/* Navigation Buttons */}
-                  <div className="flex gap-3">
-                    <Button
-                      variant="outline"
-                      onClick={prevTutorialStep}
-                      disabled={tutorialStep === 0}
-                      className="flex-1"
-                    >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
-                      Back
-                    </Button>
-                    <Button
-                      onClick={nextTutorialStep}
-                      className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
-                    >
-                      {tutorialStep === steps.length - 1 ? (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Got it!
-                        </>
-                      ) : (
-                        <>
-                          Next
-                          <ArrowRight className="w-4 h-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </>
-              )
-            })()}
-            </div>
-          </div>
-        </>
-      )}
       
       <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 lg:space-y-8 lg:px-4 xl:px-8">
         <div className="text-center space-y-3 py-4 md:py-6">
@@ -671,17 +416,6 @@ export function DiscountCalculator() {
           <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg px-4 leading-relaxed">
             Compute your entitled discounts for dining, medicine, and groceries
           </p>
-          
-          {/* Help Button */}
-          <div className="flex justify-center pt-2">
-            <button
-              onClick={startTutorial}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-white border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 transition-all font-medium text-sm shadow-sm touch-manipulation min-h-[44px]"
-            >
-              <HelpCircle className="w-4 h-4" />
-              <span>Show Tutorial</span>
-            </button>
-          </div>
           
           {/* Law Reference Banner - Mobile First */}
           <div className="max-w-4xl mx-auto px-4 mt-4">
@@ -761,7 +495,7 @@ export function DiscountCalculator() {
                   <TabsContent value="restaurant" className="space-y-4 md:space-y-6 mt-0">
                     <div className="space-y-4 md:space-y-5">
                       {/* Simple/Advanced Mode Toggle */}
-                      <div data-tutorial-id="mode-toggle" className="flex items-center justify-between p-3 md:p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-slate-200">
+                      <div className="flex items-center justify-between p-3 md:p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-slate-200">
                         <div className="flex-1">
                           <p className="text-sm font-bold text-slate-700">Calculator Mode</p>
                           <p className="text-xs text-slate-500 mt-0.5">
@@ -797,7 +531,7 @@ export function DiscountCalculator() {
                       </div>
 
                       {/* Amount Input */}
-                      <div data-tutorial-id="bill-amount" className="space-y-2.5">
+                      <div className="space-y-2.5">
                         <Label htmlFor="rm-amount" className="text-base font-semibold text-slate-700">Bill Amount</Label>
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₱</span>
@@ -814,7 +548,7 @@ export function DiscountCalculator() {
                       </div>
 
                       {/* Toggle */}
-                      <div data-tutorial-id="group-toggle" className="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 hover:border-blue-300 transition-all min-h-[60px]">
+                      <div className="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 hover:border-blue-300 transition-all min-h-[60px]">
                         <div className="space-y-0.5 flex-1">
                           <Label className="text-sm font-bold cursor-pointer text-slate-700" htmlFor="rm-restaurant-toggle">Group Dining</Label>
                           <p className="text-xs text-slate-500">Split bill with others?</p>
@@ -832,7 +566,7 @@ export function DiscountCalculator() {
                       {isRestaurant && isAdvancedMode && (
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="advanced" className="border-0 border-b-0">
-                            <div data-tutorial-id="advanced-options" className="border-2 border-indigo-400 rounded-xl bg-gradient-to-br from-white to-indigo-50/30 shadow-sm overflow-hidden">
+                            <div className="border-2 border-indigo-400 rounded-xl bg-gradient-to-br from-white to-indigo-50/30 shadow-sm overflow-hidden">
                             <AccordionTrigger className="px-4 md:px-6 py-4 hover:bg-indigo-50 hover:no-underline">
                               <div className="flex items-center gap-3">
                                 <div className="p-2 rounded-lg bg-indigo-100">
@@ -927,7 +661,7 @@ export function DiscountCalculator() {
                       {/* Spacer between Advanced Options and Service Charge */}
                       <div className="h-4"></div>
 
-                      <div data-tutorial-id="service-charge" className="p-4 md:p-6 lg:p-8 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 space-y-4">
+                      <div className="p-4 md:p-6 lg:p-8 rounded-xl bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 space-y-4">
                         <div className="flex items-center justify-between min-h-[60px]">
                           <div className="space-y-1 flex-1">
                             <div className="flex items-center gap-2 text-orange-700 font-bold">
@@ -1112,7 +846,6 @@ export function DiscountCalculator() {
                       )}
 
                       <Button
-                        data-tutorial-id="calculate-button"
                         onClick={computeRestaurantMedicine}
                         className="w-full h-14 text-base md:text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 touch-manipulation min-h-[44px]"
                         size="lg"

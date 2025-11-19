@@ -124,6 +124,7 @@ export function DiscountCalculator() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [tutorialStep, setTutorialStep] = useState(0)
   const [highlightedElement, setHighlightedElement] = useState<HTMLElement | null>(null)
+  const [highlightRect, setHighlightRect] = useState<DOMRect | null>(null)
   
   // Receipt Matching State
   const [receiptMatchMode, setReceiptMatchMode] = useState(false)
@@ -153,6 +154,7 @@ export function DiscountCalculator() {
   useEffect(() => {
     if (!showTutorial) {
       setHighlightedElement(null)
+      setHighlightRect(null)
       return
     }
 
@@ -164,15 +166,36 @@ export function DiscountCalculator() {
       const element = document.querySelector(`[data-tutorial-id="${currentStep.highlight}"]`) as HTMLElement
       if (element) {
         setHighlightedElement(element)
-        // Scroll element into view with smooth behavior
+        
+        // Update rect and scroll
+        const updateRect = () => {
+          const rect = element.getBoundingClientRect()
+          setHighlightRect(rect)
+        }
+        
+        // Initial update
         setTimeout(() => {
+          updateRect()
           element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+          // Update rect after scroll completes
+          setTimeout(updateRect, 500)
         }, 100)
+        
+        // Update on resize
+        window.addEventListener('resize', updateRect)
+        window.addEventListener('scroll', updateRect, true)
+        
+        return () => {
+          window.removeEventListener('resize', updateRect)
+          window.removeEventListener('scroll', updateRect, true)
+        }
       } else {
         setHighlightedElement(null)
+        setHighlightRect(null)
       }
     } else {
       setHighlightedElement(null)
+      setHighlightRect(null)
     }
   }, [showTutorial, tutorialStep, isAdvancedMode])
 
@@ -210,7 +233,7 @@ export function DiscountCalculator() {
   const getTutorialSteps = () => {
     const baseSteps = [
       {
-        title: "Welcome to PH PWD/Senior Discount Calculator! 🎉",
+        title: "Welcome to DiscountPH! 🎉",
         description: "This calculator helps you compute discounts for PWDs and Senior Citizens in the Philippines. Let's take a quick tour!",
         highlight: null
       },
@@ -523,33 +546,33 @@ export function DiscountCalculator() {
           <div className="fixed inset-0 bg-black/70 z-40 pointer-events-none" />
           
           {/* Highlighted Element Spotlight */}
-          {highlightedElement && (() => {
-            const rect = highlightedElement.getBoundingClientRect()
+          {highlightRect && (() => {
             const padding = 8
             
             return (
               <>
                 {/* White spotlight background */}
                 <div
-                  className="fixed z-40 pointer-events-none bg-white rounded-xl"
+                  className="fixed z-[45] pointer-events-none bg-white rounded-xl"
                   style={{
-                    top: `${rect.y - padding}px`,
-                    left: `${rect.x - padding}px`,
-                    width: `${rect.width + padding * 2}px`,
-                    height: `${rect.height + padding * 2}px`,
+                    top: `${highlightRect.top - padding}px`,
+                    left: `${highlightRect.left - padding}px`,
+                    width: `${highlightRect.width + padding * 2}px`,
+                    height: `${highlightRect.height + padding * 2}px`,
                     transition: 'all 0.3s ease-in-out',
                     boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.7)'
                   }}
                 />
                 {/* Animated border ring */}
                 <div
-                  className="fixed z-50 pointer-events-none border-4 border-blue-500 rounded-xl animate-pulse"
+                  className="fixed z-50 pointer-events-none border-4 border-blue-500 rounded-xl"
                   style={{
-                    top: `${rect.y - padding}px`,
-                    left: `${rect.x - padding}px`,
-                    width: `${rect.width + padding * 2}px`,
-                    height: `${rect.height + padding * 2}px`,
-                    transition: 'all 0.3s ease-in-out'
+                    top: `${highlightRect.top - padding}px`,
+                    left: `${highlightRect.left - padding}px`,
+                    width: `${highlightRect.width + padding * 2}px`,
+                    height: `${highlightRect.height + padding * 2}px`,
+                    transition: 'all 0.3s ease-in-out',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
                   }}
                 />
               </>
@@ -639,7 +662,7 @@ export function DiscountCalculator() {
         <div className="text-center space-y-3 py-4 md:py-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-2">
             <Sparkles className="w-4 h-4" />
-            <span>Philippine Discount Calculator</span>
+            <span>DiscountPH</span>
           </div>
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-900 tracking-tight px-4">
             Senior Citizen & PWD

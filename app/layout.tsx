@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'PH Discount Calculator | Senior Citizen & PWD',
+  title: 'DiscountPH | PWD & Senior Citizen Discount Calculator',
   description: 'Calculate discounts for senior citizens and persons with disability (PWD) in the Philippines. Get instant 20% discount and VAT exemption calculations based on Republic Act No. 10754.',
   generator: 'v0.app',
   viewport: {
@@ -20,6 +20,10 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
+        url: '/icon.svg',
+        type: 'image/svg+xml',
+      },
+      {
         url: '/icon-light-32x32.png',
         media: '(prefers-color-scheme: light)',
       },
@@ -27,12 +31,9 @@ export const metadata: Metadata = {
         url: '/icon-dark-32x32.png',
         media: '(prefers-color-scheme: dark)',
       },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
     ],
     apple: '/apple-icon.png',
+    shortcut: '/icon.svg',
   },
 }
 

@@ -91,6 +91,9 @@ export function AiAssistant() {
     ])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const [viewportHeight, setViewportHeight] = useState<number | null>(null)
+    const [windowHeight, setWindowHeight] = useState<number | null>(null)
+    const [isMobileViewport, setIsMobileViewport] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
 

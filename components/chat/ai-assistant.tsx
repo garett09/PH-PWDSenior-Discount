@@ -236,7 +236,7 @@ export function AiAssistant() {
             isMinimized
                 ? "bottom-6 right-6 w-72 rounded-xl"
                 : "inset-0 md:inset-auto md:bottom-6 md:right-6 w-full h-full md:w-[400px] md:h-[600px] md:rounded-xl"
-        )}>
+        )} style={!isMinimized ? { bottom: keyboardOffset } : undefined}>
             <Card className="w-full h-full flex flex-col border-0 md:border border-blue-200 overflow-hidden rounded-none md:rounded-xl">
                 <CardHeader className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex flex-row items-center justify-between space-y-0 shrink-0">
                     <div className="flex items-center gap-2">

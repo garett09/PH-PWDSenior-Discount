@@ -157,7 +157,7 @@ export function RightsFlashcards() {
                     </DialogHeader>
 
                     <ScrollArea className="max-h-[60vh] mt-2">
-                        <div className="text-slate-700 text-sm leading-relaxed">
+                        <div className="text-slate-700 text-sm leading-relaxed pr-6">
                             {selectedRight?.fullText.split('\n').map((line, lineIndex) => {
                                 const trimmedLine = line.trim()
                                 

@@ -180,10 +180,10 @@ export function DiscountCalculator() {
     }
   }
 
-  const copyAllBreakdown = async () => {
+  const shareBreakdown = async () => {
     if (!rmResult) return
     
-    let text = `Bill Summary\n`
+    let text = `DiscountPH - Bill Summary\n`
     text += `━━━━━━━━━━━━━━━━━━━━━━\n`
     text += `Base Amount: ${formatCurrency(rmResult.baseAmount)}\n`
     text += `VAT (12%): +${formatCurrency(rmResult.vatAmount)}\n`
@@ -227,7 +227,24 @@ export function DiscountCalculator() {
       }
     }
     
-    await copyToClipboard(text, 'all-breakdown')
+    // Try Web Share API first (works on mobile)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'DiscountPH - Bill Summary',
+          text: text
+        })
+        return
+      } catch (err) {
+        // User cancelled or share failed, fall back to clipboard
+        if ((err as Error).name !== 'AbortError') {
+          console.error('Share failed:', err)
+        }
+      }
+    }
+    
+    // Fallback to clipboard
+    await copyToClipboard(text, 'share-breakdown')
   }
 
   const clearBill = () => {
@@ -1634,10 +1651,10 @@ export function DiscountCalculator() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={copyAllBreakdown}
+                          onClick={shareBreakdown}
                           className="flex-1 min-w-[140px] touch-manipulation min-h-[44px]"
                         >
-                          {copiedId === 'all-breakdown' ? (
+                          {copiedId === 'share-breakdown' ? (
                             <><Check className="w-4 h-4 mr-2" /> Copied!</>
                           ) : (
                             <><Share2 className="w-4 h-4 mr-2" /> Share</>

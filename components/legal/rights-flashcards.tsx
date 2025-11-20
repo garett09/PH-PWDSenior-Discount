@@ -32,12 +32,25 @@ const RIGHTS = [
         bgColor: 'bg-orange-100',
         shortDesc: 'Fully exempt from service charges.',
         fullText: `
-      **DOJ Opinion No. 45, Series of 2024 & Joint Memorandum Circular No. 01-2022:**
+      **Republic Act No. 10754, Section 32:**
       
-      "PWDs and Senior Citizens are entitled to exemption from service charges on their proportional share of consumption in establishments covered by the discount privilege."
+      PWDs are entitled to discounts and exemptions on "fees and charges relative to the utilization of all services in hotels and similar lodging establishments; restaurants and recreation centers."
       
-      **Explanation:**
-      PWDs and Senior Citizens are exempt from paying their proportional share of service charges. In group dining scenarios, the service charge should be prorated based on actual consumption or headcount, and only regular diners pay their share of the service charge. The PWD/Senior portion is fully exempt.
+      **DOJ Opinion No. 45, Series of 2024:**
+      
+      PWDs and Senior Citizens are exempt from service charges on their proportional share of consumption.
+      
+      **What is a Service Charge?**
+      
+      An additional fee (typically 10%) that restaurants and hotels add to your bill for service. This is separate from tips and is usually mandatory.
+      
+      **How the Exemption Works:**
+      
+      • **Single Purchase:** You are FULLY EXEMPT—no service charge should be charged.
+      
+      • **Group Dining:** Service charge is divided among all diners. Your share is FULLY EXEMPT. Only regular diners pay their share.
+      
+      **Important:** This is a complete exemption, not a discount. You should not pay any service charge on your portion.
     `,
         sourceUrl: 'https://ncda.gov.ph/disability-laws/republic-acts/republic-act-no-10754-an-act-expanding-the-benefits-and-privileges-of-persons-with-disability-pwd/'
     },
@@ -144,10 +157,58 @@ export function RightsFlashcards() {
                     </DialogHeader>
 
                     <ScrollArea className="max-h-[60vh] mt-2">
-                        <div className="space-y-4 text-slate-700 text-sm leading-relaxed whitespace-pre-line">
-                            {selectedRight?.fullText.split('**').map((part, i) =>
-                                i % 2 === 1 ? <strong key={i} className="text-slate-900 block mb-1 mt-3">{part}</strong> : part
-                            )}
+                        <div className="text-slate-700 text-sm leading-relaxed">
+                            {selectedRight?.fullText.split('\n').map((line, lineIndex) => {
+                                const trimmedLine = line.trim()
+                                
+                                // Skip empty lines
+                                if (!trimmedLine) return <div key={lineIndex} className="h-2" />
+                                
+                                // Handle bold headings (lines starting with **)
+                                if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+                                    const heading = trimmedLine.replace(/\*\*/g, '')
+                                    return (
+                                        <h4 key={lineIndex} className="font-bold text-slate-900 text-base mt-4 mb-2 first:mt-0">
+                                            {heading}
+                                        </h4>
+                                    )
+                                }
+                                
+                                // Handle bullet points
+                                if (trimmedLine.startsWith('•')) {
+                                    const bulletContent = trimmedLine.substring(1).trim()
+                                    // Check if it contains bold text
+                                    const parts = bulletContent.split('**')
+                                    return (
+                                        <div key={lineIndex} className="flex gap-2 mb-1.5">
+                                            <span className="text-slate-900 mt-0.5">•</span>
+                                            <div className="flex-1">
+                                                {parts.map((part, partIndex) =>
+                                                    partIndex % 2 === 1 ? (
+                                                        <strong key={partIndex} className="text-slate-900">{part}</strong>
+                                                    ) : (
+                                                        <span key={partIndex}>{part}</span>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                    )
+                                }
+                                
+                                // Regular paragraph text
+                                const parts = trimmedLine.split('**')
+                                return (
+                                    <p key={lineIndex} className="mb-2 text-slate-700">
+                                        {parts.map((part, partIndex) =>
+                                            partIndex % 2 === 1 ? (
+                                                <strong key={partIndex} className="text-slate-900">{part}</strong>
+                                            ) : (
+                                                <span key={partIndex}>{part}</span>
+                                            )
+                                        )}
+                                    </p>
+                                )
+                            })}
 
                             {selectedRight?.sourceUrl && (
                                 <div className="mt-6 pt-4 border-t border-slate-200">

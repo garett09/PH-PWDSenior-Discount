@@ -935,7 +935,7 @@ export function DiscountCalculator() {
                             </div>
 
                             {manualScMode && (
-                              <div className="mt-4 space-y-2 animate-in fade-in slide-in-from-top-2">
+                              <div className="mt-4 space-y-3 animate-in fade-in slide-in-from-top-2">
                                 <Label htmlFor="rm-sc-manual" className="text-sm font-semibold text-slate-700">Printed Service Charge (₱)</Label>
                                 <Input
                                   id="rm-sc-manual"
@@ -949,6 +949,27 @@ export function DiscountCalculator() {
                                 <p className="text-xs text-slate-600">
                                   Tip: Copy the amount exactly as shown on the official receipt. We'll handle the exemption math automatically.
                                 </p>
+                                
+                                {/* Service Charge Percentage Finder */}
+                                {manualScAmount && parseFloat(manualScAmount) > 0 && rmAmount && parseFloat(rmAmount) > 0 && (
+                                  <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                    <p className="text-xs font-semibold text-blue-900 mb-2">Service Charge Percentage:</p>
+                                    <div className="space-y-1.5">
+                                      <div className="flex justify-between items-center text-xs">
+                                        <span className="text-slate-600">On Subtotal (with VAT):</span>
+                                        <span className="font-bold text-blue-700">
+                                          {((parseFloat(manualScAmount) / parseFloat(rmAmount)) * 100).toFixed(2)}%
+                                        </span>
+                                      </div>
+                                      <div className="flex justify-between items-center text-xs">
+                                        <span className="text-slate-600">On Base (without VAT):</span>
+                                        <span className="font-bold text-blue-700">
+                                          {((parseFloat(manualScAmount) / (parseFloat(rmAmount) / 1.12)) * 100).toFixed(2)}%
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             )}
 
@@ -1423,17 +1444,39 @@ export function DiscountCalculator() {
                         </p>
                       </div>
 
-                      <div className="p-4 md:p-6 lg:p-8 bg-orange-50 border-2 border-orange-200 rounded-lg space-y-3">
-                        <p className="text-sm sm:text-base text-orange-700 font-semibold leading-relaxed">
-                          <strong>Service Charge Exemption:</strong> Per the official guidelines above, PWDs and Senior Citizens are <strong>EXEMPT from paying their proportional share of service charges</strong> (not just discounted, but fully exempt). For single purchases, the PWD/Senior pays no service charge. For group dining, only regular diners pay their share of the service charge.
-                        </p>
+                      <div className="p-4 md:p-6 bg-orange-50 border-2 border-orange-200 rounded-lg space-y-3">
+                        <h5 className="font-bold text-orange-900 text-base sm:text-lg">Service Charge Exemption</h5>
+                        
+                        <div>
+                          <p className="text-sm text-orange-800 font-semibold mb-1">Republic Act No. 10754, Section 32:</p>
+                          <p className="text-sm text-orange-700 leading-relaxed pl-4 border-l-2 border-orange-300">
+                            PWDs are entitled to discounts and exemptions on "fees and charges relative to the utilization of all services in hotels and similar lodging establishments; restaurants and recreation centers."
+                          </p>
+                        </div>
+                        
                         <div className="pt-2 border-t border-orange-200">
-                          <p className="text-xs text-orange-600 font-medium mb-2">Referenced in:</p>
-                          <ul className="text-xs text-orange-700 space-y-1">
-                            <li>• <strong>Joint Memorandum Circular No. 01-2022</strong> - Primary reference for tax computation</li>
-                            <li>• <strong>Revenue Regulations No. 5-2017</strong> - BIR implementing rules for RA 10754</li>
-                            <li>• <strong>DOJ Opinion No. 45, s. 2024</strong> - Clarifies service charge exemptions</li>
+                          <p className="text-sm text-orange-800 font-semibold mb-1">DOJ Opinion No. 45, Series of 2024:</p>
+                          <p className="text-sm text-orange-700 leading-relaxed">
+                            PWDs and Senior Citizens are exempt from service charges on their proportional share of consumption.
+                          </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-orange-200">
+                          <p className="text-sm text-orange-800 font-semibold mb-1">What is a Service Charge?</p>
+                          <p className="text-sm text-orange-700 leading-relaxed">
+                            An additional fee (typically 10%) that restaurants and hotels add to your bill for service. This is separate from tips and is usually mandatory.
+                          </p>
+                        </div>
+
+                        <div className="pt-2 border-t border-orange-200">
+                          <p className="text-sm text-orange-800 font-semibold mb-2">How the Exemption Works:</p>
+                          <ul className="text-sm text-orange-700 space-y-1.5 list-disc pl-5">
+                            <li><strong>Single Purchase:</strong> You are <strong>FULLY EXEMPT</strong>—no service charge should be charged.</li>
+                            <li><strong>Group Dining:</strong> Service charge is divided among all diners. Your share is <strong>FULLY EXEMPT</strong>. Only regular diners pay their share.</li>
                           </ul>
+                          <p className="text-sm text-orange-800 font-semibold mt-2">
+                            <strong>Important:</strong> This is a complete exemption, not a discount. You should not pay any service charge on your portion.
+                          </p>
                         </div>
                       </div>
 

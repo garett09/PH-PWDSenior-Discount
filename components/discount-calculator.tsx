@@ -169,6 +169,38 @@ export function DiscountCalculator() {
   const [exclusivePwdAmount, setExclusivePwdAmount] = useState<string>('')
   const [calculationMethod, setCalculationMethod] = useState<'prorated' | 'exclusive'>('prorated')
 
+  // Receipt Scanner Data from Chatbot
+  const [chatbotReceiptData, setChatbotReceiptData] = useState<any>(null)
+
+  // Handle receipt data from chatbot
+  useEffect(() => {
+    if (!chatbotReceiptData) return
+
+    const data = chatbotReceiptData
+
+    // Switch to appropriate tab and pre-fill fields
+    if (data.type === 'restaurant') {
+      setActiveTab('restaurant')
+      setRmAmount(data.totalAmount.toString())
+      setIsRestaurant(true)
+      if (data.serviceCharge) {
+        setHasServiceCharge(true)
+        setManualScMode(true)
+        setManualScAmount(data.serviceCharge.toString())
+      }
+    } else if (data.type === 'grocery') {
+      setActiveTab('groceries')
+      setGAmount(data.totalAmount.toString())
+    } else if (data.type === 'medicine') {
+      setActiveTab('medicine')
+      setRmAmount(data.totalAmount.toString())
+      setIsRestaurant(false)
+    }
+
+    // Clear the data after processing
+    setChatbotReceiptData(null)
+  }, [chatbotReceiptData])
+
   const formatCurrency = (value: number) => {
     return value.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })
   }
@@ -2411,7 +2443,7 @@ export function DiscountCalculator() {
           </div>
         </div>
       </div>
-      <AiAssistant />
+      <AiAssistant onReceiptDataExtracted={(data) => setChatbotReceiptData(data)} />
     </div>
   )
 }

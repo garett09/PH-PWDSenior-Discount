@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
-import { MessageCircle, Send, X, Bot, User, Loader2, Sparkles, Minimize2, Maximize2 } from 'lucide-react'
+import { MessageCircle, Send, X, Bot, User, Loader2, Sparkles, Minimize2, Maximize2, Paperclip, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
 
@@ -81,16 +81,32 @@ ${APP_KNOWLEDGE}
 interface Message {
     role: 'user' | 'model'
     text: string
+    image?: string // base64 image data
 }
 
-export function AiAssistant() {
+interface ReceiptData {
+    type: 'restaurant' | 'grocery' | 'medicine' | 'utility' | 'transport'
+    totalAmount: number
+    serviceCharge?: number
+    items?: Array<{ name: string; price: number }>
+    establishmentName?: string
+}
+
+interface AiAssistantProps {
+    onReceiptDataExtracted?: (data: ReceiptData) => void
+}
+
+export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
     const [isOpen, setIsOpen] = useState(false)
     const [isMinimized, setIsMinimized] = useState(false)
     const [messages, setMessages] = useState<Message[]>([
-        { role: 'model', text: 'Hello! I\'m your DiscountPH assistant. Ask me anything about PWD or Senior Citizen discounts!' }
+        { role: 'model', text: 'Hello! I\'m your DiscountPH assistant. Ask me anything about PWD or Senior Citizen discounts, or upload a receipt for analysis!' }
     ])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
+    const [attachedImage, setAttachedImage] = useState<string | null>(null) // base64
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [extractedReceiptData, setExtractedReceiptData] = useState<ReceiptData | null>(null)
     const [viewportHeight, setViewportHeight] = useState<number | null>(null)
     const [windowHeight, setWindowHeight] = useState<number | null>(null)
     const [isMobileViewport, setIsMobileViewport] = useState(false)
@@ -152,18 +168,50 @@ export function AiAssistant() {
 
     const keyboardOffset =
         !isMinimized &&
-        isMobileViewport &&
-        windowHeight !== null &&
-        viewportHeight !== null
+            isMobileViewport &&
+            windowHeight !== null &&
+            viewportHeight !== null
             ? Math.max(windowHeight - viewportHeight, 0)
             : 0
 
-    const handleSend = async () => {
-        if (!input.trim() || isLoading) return
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file) return
 
-        const userMessage = input.trim()
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please upload a valid image file (JPG, PNG, etc.)')
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = () => {
+            const base64 = reader.result as string
+            setAttachedImage(base64)
+            setImagePreview(URL.createObjectURL(file))
+        }
+        reader.readAsDataURL(file)
+    }
+
+    const handleRemoveImage = () => {
+        setAttachedImage(null)
+        setImagePreview(null)
+    }
+
+    const handleSend = async () => {
+        if ((!input.trim() && !attachedImage) || isLoading) return
+
+        const userMessage = input.trim() || '📷 [Image attached]'
+        const imageToSend = attachedImage
         setInput('')
-        setMessages(prev => [...prev, { role: 'user', text: userMessage }])
+        setAttachedImage(null)
+        setImagePreview(null)
+
+        setMessages(prev => [...prev, {
+            role: 'user',
+            text: userMessage,
+            image: imageToSend || undefined
+        }])
         setIsLoading(true)
 
         try {
@@ -175,6 +223,25 @@ export function AiAssistant() {
                 setIsLoading(false)
                 return
             }
+
+            // Build parts array
+            const parts: any[] = []
+
+            // Add receipt analysis prompt if image is attached
+            if (imageToSend) {
+                parts.push({
+                    text: SYSTEM_PROMPT + `\n\n**IMPORTANT: The user has uploaded a receipt image.**\n\nAnalyze the receipt and extract:\n1. Receipt type (restaurant, grocery, medicine, utility, transport)\n2. Total bill amount\n3. Service charge (if present)\n4. VAT amount (if shown)\n5. Individual items (if visible)\n6. Establishment name\n\nProvide a friendly summary of what you see, then output the extracted data in this JSON format:\n\`\`\`json\n{\n  "type": "restaurant" | "grocery" | "medicine" | "utility" | "transport",\n  "totalAmount": number,\n  "serviceCharge": number | null,\n  "items": [{ "name": string, "price": number }],\n  "establishmentName": string\n}\n\`\`\`\n\nUser Question: ` + userMessage
+                })
+                parts.push({
+                    inline_data: {
+                        mime_type: imageToSend.startsWith('data:image/png') ? 'image/png' : 'image/jpeg',
+                        data: imageToSend.split(',')[1] // Remove data:image/...;base64, prefix
+                    }
+                })
+            } else {
+                parts.push({ text: SYSTEM_PROMPT + "\n\nUser Question: " + userMessage })
+            }
+
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${API_KEY}`, {
                 method: 'POST',
                 headers: {
@@ -184,7 +251,7 @@ export function AiAssistant() {
                     contents: [
                         {
                             role: 'user',
-                            parts: [{ text: SYSTEM_PROMPT + "\n\nUser Question: " + userMessage }]
+                            parts
                         }
                     ],
                     generationConfig: {
@@ -202,12 +269,37 @@ export function AiAssistant() {
             }
 
             const botResponse = data.candidates[0].content.parts[0].text
+
+            // Try to extract JSON from response if image was sent
+            if (imageToSend) {
+                try {
+                    const jsonMatch = botResponse.match(/```json\n([\s\S]*?)\n```/)
+                    if (jsonMatch) {
+                        const extractedData = JSON.parse(jsonMatch[1])
+                        setExtractedReceiptData(extractedData)
+                    }
+                } catch (e) {
+                    console.error('Failed to parse receipt data:', e)
+                }
+            }
+
             setMessages(prev => [...prev, { role: 'model', text: botResponse }])
         } catch (error) {
             console.error('Chat error:', error)
             setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error connecting to the server. Please try again later.' }])
         } finally {
             setIsLoading(false)
+        }
+    }
+
+    const handleUseReceiptData = () => {
+        if (extractedReceiptData && onReceiptDataExtracted) {
+            onReceiptDataExtracted(extractedReceiptData)
+            setMessages(prev => [...prev, {
+                role: 'model',
+                text: '✅ Receipt data sent to calculator! You can now review and calculate your discount.'
+            }])
+            setExtractedReceiptData(null)
         }
     }
 
@@ -310,7 +402,16 @@ export function AiAssistant() {
                                                     </ReactMarkdown>
                                                 </div>
                                             ) : (
-                                                <p>{msg.text}</p>
+                                                <div>
+                                                    {msg.image && (
+                                                        <img
+                                                            src={msg.image}
+                                                            alt="Uploaded receipt"
+                                                            className="w-full rounded-lg mb-2 max-w-[200px]"
+                                                        />
+                                                    )}
+                                                    <p>{msg.text}</p>
+                                                </div>
                                             )}
                                         </div>
                                     </div>
@@ -330,24 +431,79 @@ export function AiAssistant() {
                         </CardContent>
 
                         <CardFooter className="p-3 bg-white border-t">
-                            <div className="flex w-full items-center gap-2">
-                                <Input
-                                    ref={inputRef}
-                                    placeholder="Ask about discounts..."
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    onKeyDown={handleKeyDown}
-                                    disabled={isLoading}
-                                    className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500"
-                                />
-                                <Button
-                                    onClick={handleSend}
-                                    disabled={!input.trim() || isLoading}
-                                    size="icon"
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
-                                >
-                                    <Send className="h-4 w-4" />
-                                </Button>
+                            <div className="flex w-full flex-col gap-2">
+                                {/* Image Preview */}
+                                {imagePreview && (
+                                    <div className="relative inline-block">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Receipt preview"
+                                            className="w-20 h-20 object-cover rounded-lg border-2 border-blue-200"
+                                        />
+                                        <button
+                                            onClick={handleRemoveImage}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Use Receipt Data Button */}
+                                {extractedReceiptData && (
+                                    <Button
+                                        onClick={handleUseReceiptData}
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                        size="sm"
+                                    >
+                                        <ImageIcon className="h-4 w-4 mr-2" />
+                                        Use This Receipt Data
+                                    </Button>
+                                )}
+
+                                {/* Input Row */}
+                                <div className="flex w-full items-center gap-2">
+                                    {/* Hidden File Input */}
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                        id="receipt-upload"
+                                    />
+
+                                    {/* Paperclip Button */}
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => document.getElementById('receipt-upload')?.click()}
+                                        disabled={isLoading}
+                                        className="shrink-0 text-slate-600 hover:text-indigo-600"
+                                        title="Upload receipt"
+                                    >
+                                        <Paperclip className="h-5 w-5" />
+                                    </Button>
+
+                                    <Input
+                                        ref={inputRef}
+                                        placeholder="Ask about discounts or upload receipt..."
+                                        value={input}
+                                        onChange={(e) => setInput(e.target.value)}
+                                        onKeyDown={handleKeyDown}
+                                        disabled={isLoading}
+                                        className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500"
+                                    />
+                                    <Button
+                                        onClick={handleSend}
+                                        disabled={(!input.trim() && !attachedImage) || isLoading}
+                                        size="icon"
+                                        className="bg-indigo-600 hover:bg-indigo-700 text-white shrink-0"
+                                    >
+                                        <Send className="h-4 w-4" />
+                                    </Button>
+                                </div>
                             </div>
                         </CardFooter>
                     </>

@@ -23,6 +23,16 @@ Your role is to answer questions about benefits, laws, and calculations based on
    - Calculation: (Bill / 1.12) * 0.80.
    - Service Charge: PWDs/Seniors are EXEMPT from paying their portion of the service charge (DOJ Opinion No. 45, s. 2024).
    - Group Meals: Discount applies only to the share of the PWD/Senior.
+   - **Service Charge Percentage Analysis:**
+     - When users ask about service charge percentages from receipts, help them understand:
+       - Most restaurants calculate service charge at 10% on the base amount (without VAT)
+       - Formula: Base Amount = Subtotal / 1.12, then Service Charge = Base × 10%
+       - For group dining with PWD, service charge is calculated on the full amount but PWD is exempt from their share
+       - If a receipt shows a service charge amount, you can calculate what percentage it represents:
+         * On Subtotal (with VAT): (Service Charge / Subtotal) × 100
+         * On Base (without VAT): (Service Charge / (Subtotal / 1.12)) × 100
+       - The percentage closest to 10% on the base amount is typically how it was calculated
+       - If the percentage is much lower (e.g., 4-5%), it may indicate group dining where only regular diners paid their share
 
 2. **Medicines:**
    - Benefit: 20% Discount AND VAT Exemption.
@@ -232,7 +242,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
             // Add receipt analysis prompt if image is attached
             if (imageToSend) {
                 parts.push({
-                    text: SYSTEM_PROMPT + `\n\n**IMPORTANT: The user has uploaded a receipt image.**\n\nAnalyze the receipt and extract:\n1. Receipt type (restaurant, grocery, medicine, utility, transport)\n2. Total bill amount\n3. Service charge (if present)\n4. VAT amount (if shown)\n5. Individual items (if visible)\n6. Establishment name\n\n**ADVANCED ANALYSIS:**\n- Look for specific meals that might be for the PWD/Senior (e.g., a single meal set vs shared platters).\n- If you see distinct individual meals, suggest 'exclusive' calculation method and estimate the PWD's exclusive amount.\n- If items look shared (platters, pizza, bulk), suggest 'prorated'.\n\nProvide a friendly summary, then output the extracted data in this JSON format:\n\`\`\`json\n{\n  "type": "restaurant" | "grocery" | "medicine" | "utility" | "transport",\n  "totalAmount": number,\n  "serviceCharge": number | null,\n  "items": [{ "name": string, "price": number }],\n  "establishmentName": string,\n  "calculationMethod": "prorated" | "exclusive",\n  "exclusiveAmount": number (optional, if method is exclusive)\n}\n\`\`\`\n\nUser Question: ` + userMessage
+                    text: SYSTEM_PROMPT + `\n\n**IMPORTANT: The user has uploaded a receipt image.**\n\nAnalyze the receipt and extract:\n1. Receipt type (restaurant, grocery, medicine, utility, transport)\n2. Total bill amount (subtotal)\n3. Service charge (if present) - IMPORTANT: Note the exact amount shown\n4. VAT amount (if shown)\n5. Individual items (if visible)\n6. Establishment name\n7. Number of diners (if mentioned, e.g., "2 guests, 1 PWD")\n\n**SERVICE CHARGE PERCENTAGE ANALYSIS:**\n- If service charge is present, calculate what percentage it represents:\n  * On Subtotal (with VAT): (Service Charge / Subtotal) × 100\n  * On Base (without VAT): (Service Charge / (Subtotal / 1.12)) × 100\n- Most restaurants calculate at 10% on base amount (without VAT)\n- If percentage is much lower (4-5%), it may indicate group dining where only regular diners paid their share\n- Explain which calculation method is most likely based on the percentages\n\n**ADVANCED ANALYSIS:**\n- Look for specific meals that might be for the PWD/Senior (e.g., a single meal set vs shared platters).\n- If you see distinct individual meals, suggest 'exclusive' calculation method and estimate the PWD's exclusive amount.\n- If items look shared (platters, pizza, bulk), suggest 'prorated'.\n\nProvide a friendly summary including the service charge percentage analysis, then output the extracted data in this JSON format:\n\`\`\`json\n{\n  "type": "restaurant" | "grocery" | "medicine" | "utility" | "transport",\n  "totalAmount": number,\n  "serviceCharge": number | null,\n  "items": [{ "name": string, "price": number }],\n  "establishmentName": string,\n  "calculationMethod": "prorated" | "exclusive",\n  "exclusiveAmount": number (optional, if method is exclusive)\n}\n\`\`\`\n\nUser Question: ` + userMessage
                 })
                 parts.push({
                     inline_data: {

@@ -63,7 +63,29 @@ MODULE 5: TRANSPORT CALCULATOR
   - Final Fare = (Base Fare / 1.12) * 0.80.
   - Note: Other fees (fuel surcharge, terminal fees) might not be discountable depending on the carrier, but the law covers the "actual fare".
 
-MODULE 6: LEGAL TOOLS
+MODULE 6: SERVICE CHARGE PERCENTAGE FINDER
+- **Purpose:** Quickly determine what percentage the service charge was calculated at from a receipt.
+- **Location:** Integrated into the Dining tab, appears automatically when using "Manual Service Charge Audit"
+- **How to Use:**
+  1. Enter your total bill amount in the Dining calculator
+  2. Enable "Manual Service Charge Audit" in Advanced Mode
+  3. Enter the service charge amount from your receipt
+  4. The percentage finder automatically shows two calculations:
+     - **On Subtotal (with VAT):** Percentage if service charge was calculated on the total bill including VAT
+     - **On Base (without VAT):** Percentage if service charge was calculated on the amount after removing VAT
+- **Interpretation:**
+  - Most restaurants calculate service charge on the base amount (without VAT), typically at 10%
+  - If the "On Base (without VAT)" shows a percentage close to 10% (e.g., 9-11%), that's likely how it was calculated
+  - If the "On Subtotal (with VAT)" shows a percentage close to 10%, the restaurant calculated it on the gross amount
+- **Example:**
+  - Bill: ₱716.00 (with VAT)
+  - Service Charge: ₱28.77
+  - On Subtotal: 4.02% (unlikely - too low)
+  - On Base: 4.50% (still low, but base = ₱716/1.12 = ₱639.29)
+  - If service charge was calculated on base at 10%: ₱639.29 × 10% = ₱63.93
+  - But receipt shows ₱28.77, which suggests it was calculated differently (possibly prorated for group dining with PWD exemption)
+
+MODULE 7: LEGAL TOOLS
 - **Rights Flashcards:** A collection of simplified legal rights (e.g., "No Service Charge", "Express Lane") with citations.
 - **Complaint Generator:** A tool to generate a formal complaint letter against establishments violating the law.
 - **City Ordinance Checker:** A database of local city ordinances providing additional perks (e.g., Free Parking, Birthday Cash Gifts).
@@ -72,4 +94,5 @@ GENERAL APP FEATURES
 - **Save Calculation:** Users can save their computations for future reference.
 - **Share Breakdown:** Users can share the detailed bill computation via text or other apps.
 - **Receipt Scanner:** (Experimental) Users can scan receipts to auto-fill amounts.
+- **Service Charge Audit:** Reverse calculate service charge percentage from receipts to verify correct calculation.
 `

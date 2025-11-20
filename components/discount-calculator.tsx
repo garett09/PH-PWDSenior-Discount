@@ -183,11 +183,26 @@ export function DiscountCalculator() {
       setActiveTab('restaurant')
       setRmAmount(data.totalAmount.toString())
       setIsRestaurant(true)
+
+      // Handle Service Charge
       if (data.serviceCharge) {
         setHasServiceCharge(true)
         setManualScMode(true)
         setManualScAmount(data.serviceCharge.toString())
       }
+
+      // Handle Advanced Mode / Exclusive Calculation
+      if (data.calculationMethod === 'exclusive' && data.exclusiveAmount) {
+        setIsAdvancedMode(true)
+        setCalculationMethod('exclusive')
+        setExclusivePwdAmount(data.exclusiveAmount.toString())
+      } else {
+        // Default to simple/prorated if not specified or if prorated
+        setCalculationMethod('prorated')
+        // Optional: Switch to simple mode if it's definitely prorated? 
+        // For now, let's only force Advanced if it's exclusive.
+      }
+
     } else if (data.type === 'grocery') {
       setActiveTab('groceries')
       setGAmount(data.totalAmount.toString())

@@ -182,10 +182,12 @@ export function AiAssistant() {
 
     return (
         <div className={cn(
-            "fixed bottom-6 right-6 z-50 transition-all duration-300 ease-in-out",
-            isMinimized ? "w-72" : "w-[90vw] md:w-[400px] h-[80vh] md:h-[600px]"
+            "fixed z-50 transition-all duration-300 ease-in-out shadow-2xl",
+            isMinimized
+                ? "bottom-6 right-6 w-72 rounded-xl"
+                : "inset-0 md:inset-auto md:bottom-6 md:right-6 w-full h-full md:w-[400px] md:h-[600px] md:rounded-xl"
         )}>
-            <Card className="w-full h-full flex flex-col shadow-2xl border-blue-200 overflow-hidden">
+            <Card className="w-full h-full flex flex-col border-0 md:border border-blue-200 overflow-hidden rounded-none md:rounded-xl">
                 <CardHeader className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex flex-row items-center justify-between space-y-0 shrink-0">
                     <div className="flex items-center gap-2">
                         <div className="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">

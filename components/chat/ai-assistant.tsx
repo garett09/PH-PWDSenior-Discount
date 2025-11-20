@@ -90,6 +90,8 @@ interface ReceiptData {
     serviceCharge?: number
     items?: Array<{ name: string; price: number }>
     establishmentName?: string
+    calculationMethod?: 'prorated' | 'exclusive'
+    exclusiveAmount?: number
 }
 
 interface AiAssistantProps {

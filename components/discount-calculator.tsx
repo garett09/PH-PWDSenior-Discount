@@ -1,8 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calculator, ShoppingCart, Utensils, Info, Receipt, Users, Percent, Sparkles, ExternalLink, Scale, FileText, X, RotateCcw, Copy, Check, ChevronDown, ChevronUp, Save, Clock, Share2 } from 'lucide-react'
+import { Calculator, ShoppingCart, Utensils, Pill, Zap, Plane, Scale, Info, Receipt, Users, Percent, Sparkles, ExternalLink, FileText, X, RotateCcw, Copy, Check, ChevronDown, ChevronUp, Save, Clock, Share2 } from 'lucide-react'
 import { saveCalculation, getSavedCalculations, deleteCalculation, formatCalculationForSharing, type SavedCalculation } from '@/lib/storage-utils'
+import { MedicineCalculator } from '@/components/calculators/medicine-calculator'
+import { UtilitiesCalculator } from '@/components/calculators/utilities-calculator'
+import { TransportCalculator } from '@/components/calculators/transport-calculator'
+import { RightsFlashcards } from '@/components/legal/rights-flashcards'
+import { ComplaintGenerator } from '@/components/legal/complaint-generator'
+import { CityOrdinanceChecker } from '@/components/city/city-ordinance-checker'
+import { AiAssistant } from '@/components/chat/ai-assistant'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
@@ -30,8 +37,8 @@ function CustomSwitch({ checked, onCheckedChange, id }: { checked: boolean; onCh
         disabled:cursor-not-allowed disabled:opacity-50 touch-manipulation
         active:scale-95
         min-w-[56px] min-h-[32px] w-[56px] h-[32px] p-1
-        ${checked 
-          ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 shadow-md shadow-blue-500/40' 
+        ${checked
+          ? 'bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 shadow-md shadow-blue-500/40'
           : 'bg-slate-300 dark:bg-slate-600 shadow-inner'
         }
       `}
@@ -42,8 +49,8 @@ function CustomSwitch({ checked, onCheckedChange, id }: { checked: boolean; onCh
           ${checked ? 'translate-x-6' : 'translate-x-0'}
           w-[24px] h-[24px] top-1
           shadow-md
-          ${checked 
-            ? 'shadow-blue-600/50' 
+          ${checked
+            ? 'shadow-blue-600/50'
             : 'shadow-slate-400/40'
           }
         `}
@@ -111,24 +118,53 @@ export function DiscountCalculator() {
     amountToPay: number
   } | null>(null)
 
+  const [medResult, setMedResult] = useState<{
+    baseAmount: number
+    vatAmount: number
+    vatDiscount: number
+    discount20: number
+    amountToPay: number
+    totalSaved: number
+  } | null>(null)
+
+  const [utilResult, setUtilResult] = useState<{
+    eligible: boolean
+    discount5: number
+    amountToPay: number
+    reason?: string
+  } | null>(null)
+
+  const [transResult, setTransResult] = useState<{
+    baseAmount: number
+    vatAmount: number
+    vatDiscount: number
+    discount20: number
+    taxesFees: number
+    amountToPay: number
+    totalSaved: number
+  } | null>(null)
+
+  // Active tab state
+  const [activeTab, setActiveTab] = useState('restaurant')
+
   // UI State for enhancements
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [expandedPersonId, setExpandedPersonId] = useState<string | null>(null)
   const [showSaveSuccess, setShowSaveSuccess] = useState(false)
   const [showRecentCalcs, setShowRecentCalcs] = useState(false)
-  
+
   // Simple/Advanced Mode
   const [isAdvancedMode, setIsAdvancedMode] = useState(false)
-  
-  
+
+
   // Receipt Matching State
   const [receiptMatchMode, setReceiptMatchMode] = useState(false)
   const [receiptActualTotal, setReceiptActualTotal] = useState<string>('')
-  
+
   // Mobile Optimization State
   const [groupSummaryExpanded, setGroupSummaryExpanded] = useState(true)
   const [perPersonExpanded, setPerPersonExpanded] = useState(true)
-  
+
   // Exclusive PWD Orders State (Mixed Transactions)
   const [exclusivePwdAmount, setExclusivePwdAmount] = useState<string>('')
   const [calculationMethod, setCalculationMethod] = useState<'prorated' | 'exclusive'>('prorated')
@@ -149,29 +185,63 @@ export function DiscountCalculator() {
   }
 
   const handleSaveCalculation = () => {
-    if (!rmResult && !gResult) return
+    if (!rmResult && !gResult && !medResult && !utilResult && !transResult) return
 
-    const calcToSave = rmResult ? {
-      type: 'restaurant' as const,
-      inputs: {
-        amount: rmAmount,
-        pwdCount: numPwdSenior,
-        regCount: numRegular,
-        isRestaurant,
-        hasServiceCharge,
-        serviceChargeRate,
-        serviceChargeBase,
-        serviceChargeExcluded,
-        manualScAmount
-      },
-      results: rmResult
-    } : {
-      type: 'groceries' as const,
-      inputs: {
-        amount: gAmount,
-        gRemaining
-      },
-      results: gResult!
+    let calcToSave: Omit<SavedCalculation, 'id' | 'timestamp'>
+
+    if (rmResult) {
+      calcToSave = {
+        type: 'restaurant' as const,
+        inputs: {
+          amount: rmAmount,
+          pwdCount: numPwdSenior,
+          regCount: numRegular,
+          isRestaurant,
+          hasServiceCharge,
+          serviceChargeRate,
+          serviceChargeBase,
+          serviceChargeExcluded,
+          manualScAmount
+        },
+        results: rmResult
+      }
+    } else if (gResult) {
+      calcToSave = {
+        type: 'groceries' as const,
+        inputs: {
+          amount: gAmount,
+          gRemaining
+        },
+        results: gResult
+      }
+    } else if (medResult) {
+      calcToSave = {
+        type: 'medicine' as const,
+        inputs: {
+          amount: rmAmount // Medicine uses the same amount input
+        },
+        results: medResult
+      }
+    } else if (utilResult) {
+      calcToSave = {
+        type: 'utilities' as const,
+        inputs: {
+          // Note: Utilities calculator has its own internal state
+          // We'll save what we can from the result
+        },
+        results: utilResult
+      }
+    } else if (transResult) {
+      calcToSave = {
+        type: 'transport' as const,
+        inputs: {
+          // Note: Transport calculator has its own internal state
+          // We'll save what we can from the result
+        },
+        results: transResult
+      }
+    } else {
+      return
     }
 
     if (saveCalculation(calcToSave)) {
@@ -182,39 +252,39 @@ export function DiscountCalculator() {
 
   const shareBreakdown = async () => {
     if (!rmResult) return
-    
+
     let text = `DiscountPH - Bill Summary\n`
     text += `━━━━━━━━━━━━━━━━━━━━━━\n`
     text += `Base Amount: ${formatCurrency(rmResult.baseAmount)}\n`
     text += `VAT (12%): +${formatCurrency(rmResult.vatAmount)}\n`
-    
+
     if (rmResult.serviceChargeTotal > 0) {
       text += `Service Charge: +${formatCurrency(rmResult.serviceChargeTotal)}\n`
     }
-    
+
     text += `\n`
     text += `VAT Exemption: -${formatCurrency(rmResult.vatDiscount)}\n`
     text += `20% Discount: -${formatCurrency(rmResult.discount20)}\n`
-    
+
     if (rmResult.serviceChargeExemption > 0) {
       text += `SC Exemption: -${formatCurrency(rmResult.serviceChargeExemption)}\n`
     }
-    
+
     text += `━━━━━━━━━━━━━━━━━━━━━━\n`
     text += `TOTAL: ${formatCurrency(rmResult.amountToPay)}\n`
     text += `Saved: ${formatCurrency(rmResult.totalDiscount)}\n`
-    
+
     if (isRestaurant && (parseInt(numPwdSenior) + parseInt(numRegular) > 1)) {
       text += `\nPer Person:\n`
       const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
       const baseAmountPerPerson = rmResult.baseAmount / totalGroup
-      
+
       if (parseInt(numPwdSenior) > 0) {
         const pwdDiscount = baseAmountPerPerson * 0.20
         const pwdTotal = baseAmountPerPerson - pwdDiscount
         text += `PWD/Senior: ${formatCurrency(pwdTotal)}\n`
       }
-      
+
       if (parseInt(numRegular) > 0) {
         const vatAmountPerPerson = rmResult.vatAmount / totalGroup
         const regCount = parseInt(numRegular) || 1
@@ -226,7 +296,7 @@ export function DiscountCalculator() {
         text += `Regular: ${formatCurrency(regTotal)}\n`
       }
     }
-    
+
     // Try Web Share API first (works on mobile)
     if (navigator.share) {
       try {
@@ -242,7 +312,7 @@ export function DiscountCalculator() {
         }
       }
     }
-    
+
     // Fallback to clipboard
     await copyToClipboard(text, 'share-breakdown')
   }
@@ -264,6 +334,9 @@ export function DiscountCalculator() {
     setGAmount('')
     setGRemaining('2500.00')
     setGResult(null)
+    setMedResult(null)
+    setUtilResult(null)
+    setTransResult(null)
   }
 
   const computeRestaurantMedicine = () => {
@@ -287,26 +360,26 @@ export function DiscountCalculator() {
     if (usingMixedTransaction) {
       // Mixed Transaction: Split into Exclusive and Shared
       methodUsed = 'mixed'
-      
+
       // 1. Calculate discount on Exclusive PWD Items (100% eligibility)
       const exclusiveBase = exclusiveAmount / 1.12
       const exclusiveVat = exclusiveAmount - exclusiveBase
       const exclusiveDiscount20 = exclusiveBase * 0.20
       exclusiveItemsDiscount = exclusiveVat + exclusiveDiscount20
-      
+
       // 2. Calculate discount on Shared Items (Prorated eligibility)
       const sharedAmount = amount - exclusiveAmount
       const sharedBase = sharedAmount / 1.12
       const sharedVat = sharedAmount - sharedBase
-      
+
       const sharedBasePerPerson = totalDiners > 0 ? sharedBase / totalDiners : 0
       const sharedVatPerPerson = totalDiners > 0 ? sharedVat / totalDiners : 0
-      
+
       const eligibleCount = Math.min(pwdCount, totalDiners)
       const sharedVatDiscount = sharedVatPerPerson * eligibleCount
       const sharedDiscount20 = sharedBasePerPerson * eligibleCount * 0.20
       sharedItemsDiscount = sharedVatDiscount + sharedDiscount20
-      
+
       // Total discounts
       vatDiscount = exclusiveVat + sharedVatDiscount
       discount20 = exclusiveDiscount20 + sharedDiscount20
@@ -316,7 +389,7 @@ export function DiscountCalculator() {
       const vatAmount = amount - baseAmount
       const baseAmountPerPerson = totalDiners > 0 ? baseAmount / totalDiners : 0
       const vatAmountPerPerson = totalDiners > 0 ? vatAmount / totalDiners : 0
-      
+
       const eligibleCount = Math.min(pwdCount, totalDiners)
       vatDiscount = vatAmountPerPerson * eligibleCount
       discount20 = baseAmountPerPerson * eligibleCount * 0.20
@@ -350,19 +423,19 @@ export function DiscountCalculator() {
 
     // Service Charge Exemption Calculation
     let serviceChargeExemption = 0
-    
+
     if (hasServiceCharge) {
       if (usingMixedTransaction) {
         // Mixed Transaction: Calculate SC exemption based on actual consumption
         // SC on exclusive items (100% PWD consumption)
         const exclusiveScExemption = exclusiveAmount * scRate
-        
+
         // SC on shared items (prorated by headcount)
         const sharedAmount = amount - exclusiveAmount
         const sharedScTotal = sharedAmount * scRate
         const sharedScPerPerson = totalDiners > 0 ? sharedScTotal / totalDiners : 0
         const sharedScExemption = sharedScPerPerson * Math.min(pwdCount, totalDiners)
-        
+
         // Total exemption
         serviceChargeExemption = exclusiveScExemption + sharedScExemption
       } else if (isRestaurant) {
@@ -373,7 +446,7 @@ export function DiscountCalculator() {
         // Solo PWD/Senior: Full exemption
         serviceChargeExemption = serviceChargeTotal
       }
-      
+
       // Cap exemption at total SC
       serviceChargeExemption = Math.min(serviceChargeExemption, serviceChargeTotal)
     }
@@ -419,7 +492,7 @@ export function DiscountCalculator() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-      
+
       <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 lg:space-y-8 lg:px-4 xl:px-8">
         <div className="text-center space-y-3 py-4 md:py-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-2">
@@ -433,7 +506,7 @@ export function DiscountCalculator() {
           <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg px-4 leading-relaxed">
             Compute your entitled discounts for dining, medicine, and groceries
           </p>
-          
+
           {/* Law Reference Banner - Mobile First */}
           <div className="max-w-4xl mx-auto px-4 mt-4">
             <a
@@ -465,7 +538,7 @@ export function DiscountCalculator() {
           {/* Input Section - Mobile First */}
           <div className="w-full lg:col-span-7 space-y-4 md:space-y-6 lg:space-y-6">
             <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm lg:h-fit">
-              <CardHeader className="pb-6 border-b bg-gradient-to-r from-slate-50 to-blue-50/50">
+              <CardHeader className="pb-4 pt-4 border-b bg-gradient-to-r from-slate-50 to-blue-50/50">
                 <CardTitle className="text-2xl font-bold flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-blue-100">
                     <Calculator className="w-5 h-5 text-blue-600" />
@@ -478,33 +551,60 @@ export function DiscountCalculator() {
               </CardHeader>
 
               <CardContent className="pt-4 md:pt-6">
-                <Tabs defaultValue="restaurant" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 mb-4 md:mb-6 lg:mb-8 h-14 bg-slate-100 p-1 md:p-1.5 rounded-xl">
+                <Tabs defaultValue="restaurant" value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4 md:mb-6 lg:mb-8 h-auto lg:h-14 bg-slate-100 p-1 md:p-1.5 rounded-xl gap-1">
                     <TabsTrigger
                       value="restaurant"
                       className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
                     >
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
                         <Utensils className="w-4 h-4" />
-                        <span className="hidden sm:inline">Restaurant</span>
+                        <span>Dining</span>
+                      </div>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="medicine"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                    >
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                        <Pill className="w-4 h-4" />
+                        <span>Meds</span>
                       </div>
                     </TabsTrigger>
                     <TabsTrigger
                       value="groceries"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
                     >
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
                         <ShoppingCart className="w-4 h-4" />
-                        <span className="hidden sm:inline">Groceries</span>
+                        <span>Grocery</span>
                       </div>
                     </TabsTrigger>
                     <TabsTrigger
-                      value="about"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                      value="utilities"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
                     >
-                      <div className="flex items-center justify-center gap-2">
-                        <Info className="w-4 h-4" />
-                        <span className="hidden sm:inline">About</span>
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                        <Zap className="w-4 h-4" />
+                        <span>Utility</span>
+                      </div>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="transport"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                    >
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                        <Plane className="w-4 h-4" />
+                        <span>Travel</span>
+                      </div>
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="more"
+                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                    >
+                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                        <Scale className="w-4 h-4" />
+                        <span>Legal</span>
                       </div>
                     </TabsTrigger>
                   </TabsList>
@@ -584,92 +684,92 @@ export function DiscountCalculator() {
                         <Accordion type="single" collapsible className="w-full">
                           <AccordionItem value="advanced" className="border-0 border-b-0">
                             <div className="border-2 border-indigo-400 rounded-xl bg-gradient-to-br from-white to-indigo-50/30 shadow-sm overflow-hidden">
-                            <AccordionTrigger className="px-4 md:px-6 py-4 hover:bg-indigo-50 hover:no-underline">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-indigo-100">
-                                  <Sparkles className="w-5 h-5 text-indigo-600" />
-                                </div>
-                                <span className="font-bold text-slate-900 text-base md:text-lg">Advanced Options</span>
-                              </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="px-4 md:px-6 pb-5">
-                              <div className="space-y-4 pt-2 pb-1">
-                                {/* Calculation Method Selection */}
-                                <div className="space-y-2">
-                                  <Label className="text-sm font-semibold text-slate-700">Calculation Method</Label>
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <button
-                                      type="button"
-                                      onClick={() => setCalculationMethod('prorated')}
-                                      className={cn(
-                                        'rounded-xl border-2 px-4 py-3 text-left transition-all touch-manipulation min-h-[44px]',
-                                        calculationMethod === 'prorated'
-                                          ? 'border-blue-600 bg-blue-50 shadow-sm'
-                                          : 'border-slate-200 bg-white hover:border-slate-300'
-                                      )}
-                                    >
-                                      <p className="text-sm font-semibold text-slate-800">Prorated</p>
-                                      <p className="text-[11px] text-slate-500">Divide whole bill</p>
-                                    </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => setCalculationMethod('exclusive')}
-                                      className={cn(
-                                        'rounded-xl border-2 px-4 py-3 text-left transition-all touch-manipulation min-h-[44px]',
-                                        calculationMethod === 'exclusive'
-                                          ? 'border-indigo-600 bg-indigo-50 shadow-sm'
-                                          : 'border-slate-200 bg-white hover:border-slate-300'
-                                      )}
-                                    >
-                                      <p className="text-sm font-semibold text-slate-800">Exclusive</p>
-                                      <p className="text-[11px] text-slate-500">Separate PWD orders</p>
-                                    </button>
+                              <AccordionTrigger className="px-4 md:px-6 py-4 hover:bg-indigo-50 hover:no-underline">
+                                <div className="flex items-center gap-3">
+                                  <div className="p-2 rounded-lg bg-indigo-100">
+                                    <Sparkles className="w-5 h-5 text-indigo-600" />
                                   </div>
+                                  <span className="font-bold text-slate-900 text-base md:text-lg">Advanced Options</span>
                                 </div>
-
-                                {/* Exclusive PWD Amount Input */}
-                                {calculationMethod === 'exclusive' && (
-                                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                                    <Label htmlFor="exclusive-pwd-amount" className="text-sm font-semibold text-slate-700">
-                                      Exclusive PWD/Senior Orders (Optional)
-                                    </Label>
-                                    <div className="relative">
-                                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₱</span>
-                                      <Input
-                                        id="exclusive-pwd-amount"
-                                        type="number"
-                                        inputMode="decimal"
-                                        placeholder="0.00"
-                                        value={exclusivePwdAmount}
-                                        onChange={(e) => setExclusivePwdAmount(e.target.value)}
-                                        className="pl-10 h-14 text-base font-semibold bg-white border-2 touch-manipulation"
-                                      />
+                              </AccordionTrigger>
+                              <AccordionContent className="px-4 md:px-6 pb-5">
+                                <div className="space-y-4 pt-2 pb-1">
+                                  {/* Calculation Method Selection */}
+                                  <div className="space-y-2">
+                                    <Label className="text-sm font-semibold text-slate-700">Calculation Method</Label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => setCalculationMethod('prorated')}
+                                        className={cn(
+                                          'rounded-xl border-2 px-4 py-3 text-left transition-all touch-manipulation min-h-[44px]',
+                                          calculationMethod === 'prorated'
+                                            ? 'border-blue-600 bg-blue-50 shadow-sm'
+                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                        )}
+                                      >
+                                        <p className="text-sm font-semibold text-slate-800">Prorated</p>
+                                        <p className="text-[11px] text-slate-500">Divide whole bill</p>
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setCalculationMethod('exclusive')}
+                                        className={cn(
+                                          'rounded-xl border-2 px-4 py-3 text-left transition-all touch-manipulation min-h-[44px]',
+                                          calculationMethod === 'exclusive'
+                                            ? 'border-indigo-600 bg-indigo-50 shadow-sm'
+                                            : 'border-slate-200 bg-white hover:border-slate-300'
+                                        )}
+                                      >
+                                        <p className="text-sm font-semibold text-slate-800">Exclusive</p>
+                                        <p className="text-[11px] text-slate-500">Separate PWD orders</p>
+                                      </button>
                                     </div>
-                                    <p className="text-xs text-slate-600 leading-relaxed">
-                                      Enter the total amount of items consumed <strong>ONLY</strong> by PWD/Senior diners.
-                                      <br />
-                                      <strong>Example:</strong> If PWD ordered a ₱2,000 steak while others shared cheaper items,
-                                      enter ₱2,000 here for maximum discount accuracy.
-                                    </p>
                                   </div>
-                                )}
 
-                                {/* Instructions */}
-                                <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg text-xs">
-                                  <p className="font-semibold text-blue-900 mb-2">When to use each method:</p>
-                                  <ul className="space-y-1.5 text-slate-700">
-                                    <li className="flex items-start gap-2">
-                                      <span className="text-blue-600 mt-0.5">•</span>
-                                      <span><strong>Prorated:</strong> Use when everyone shared all food equally (most common scenario)</span>
-                                    </li>
-                                    <li className="flex items-start gap-2">
-                                      <span className="text-indigo-600 mt-0.5">•</span>
-                                      <span><strong>Exclusive:</strong> Use when PWD/Senior ordered expensive items separately that others didn't share</span>
-                                    </li>
-                                  </ul>
+                                  {/* Exclusive PWD Amount Input */}
+                                  {calculationMethod === 'exclusive' && (
+                                    <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                                      <Label htmlFor="exclusive-pwd-amount" className="text-sm font-semibold text-slate-700">
+                                        Exclusive PWD/Senior Orders (Optional)
+                                      </Label>
+                                      <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₱</span>
+                                        <Input
+                                          id="exclusive-pwd-amount"
+                                          type="number"
+                                          inputMode="decimal"
+                                          placeholder="0.00"
+                                          value={exclusivePwdAmount}
+                                          onChange={(e) => setExclusivePwdAmount(e.target.value)}
+                                          className="pl-10 h-14 text-base font-semibold bg-white border-2 touch-manipulation"
+                                        />
+                                      </div>
+                                      <p className="text-xs text-slate-600 leading-relaxed">
+                                        Enter the total amount of items consumed <strong>ONLY</strong> by PWD/Senior diners.
+                                        <br />
+                                        <strong>Example:</strong> If PWD ordered a ₱2,000 steak while others shared cheaper items,
+                                        enter ₱2,000 here for maximum discount accuracy.
+                                      </p>
+                                    </div>
+                                  )}
+
+                                  {/* Instructions */}
+                                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-lg text-xs">
+                                    <p className="font-semibold text-blue-900 mb-2">When to use each method:</p>
+                                    <ul className="space-y-1.5 text-slate-700">
+                                      <li className="flex items-start gap-2">
+                                        <span className="text-blue-600 mt-0.5">•</span>
+                                        <span><strong>Prorated:</strong> Use when everyone shared all food equally (most common scenario)</span>
+                                      </li>
+                                      <li className="flex items-start gap-2">
+                                        <span className="text-indigo-600 mt-0.5">•</span>
+                                        <span><strong>Exclusive:</strong> Use when PWD/Senior ordered expensive items separately that others didn't share</span>
+                                      </li>
+                                    </ul>
+                                  </div>
                                 </div>
-                              </div>
-                            </AccordionContent>
+                              </AccordionContent>
                             </div>
                           </AccordionItem>
                         </Accordion>
@@ -807,17 +907,17 @@ export function DiscountCalculator() {
 
                             <Accordion type="single" collapsible className="mt-4 rounded-xl border border-orange-200 bg-white/70">
                               <AccordionItem value="sc-guide" className="border-none">
-                              <AccordionTrigger className="text-sm font-semibold text-slate-800 px-4">
-                                Service Charge Guide
-                              </AccordionTrigger>
-                              <AccordionContent className="px-4 pb-4 text-xs text-slate-600 space-y-2">
-                                <p><strong>Menu Price:</strong> Standard method. 10% of the total bill amount. Use this for most restaurants.</p>
-                                <p><strong>Price without VAT:</strong> Some hotels remove VAT first before applying the Service Charge. 10% of the amount before tax is added.</p>
-                                <p><strong>Discounted Price:</strong> Rare receipts subtract discounts before calculating the Service Charge. 10% of the amount after discounts are removed.</p>
-                                <p><strong>Manual Service Charge Audit:</strong> When in doubt, open Manual Service Charge Audit and type the amount printed on the receipt—this keeps the exemption accurate.</p>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
+                                <AccordionTrigger className="text-sm font-semibold text-slate-800 px-4">
+                                  Service Charge Guide
+                                </AccordionTrigger>
+                                <AccordionContent className="px-4 pb-4 text-xs text-slate-600 space-y-2">
+                                  <p><strong>Menu Price:</strong> Standard method. 10% of the total bill amount. Use this for most restaurants.</p>
+                                  <p><strong>Price without VAT:</strong> Some hotels remove VAT first before applying the Service Charge. 10% of the amount before tax is added.</p>
+                                  <p><strong>Discounted Price:</strong> Rare receipts subtract discounts before calculating the Service Charge. 10% of the amount after discounts are removed.</p>
+                                  <p><strong>Manual Service Charge Audit:</strong> When in doubt, open Manual Service Charge Audit and type the amount printed on the receipt—this keeps the exemption accurate.</p>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Accordion>
                           </div>
                         )}
                       </div>
@@ -925,12 +1025,64 @@ export function DiscountCalculator() {
                     </div>
                   </TabsContent>
 
+                  <TabsContent value="medicine">
+                    <MedicineCalculator onResultChange={setMedResult} />
+                  </TabsContent>
+
+                  <TabsContent value="utilities">
+                    <UtilitiesCalculator onResultChange={setUtilResult} />
+                  </TabsContent>
+
+                  <TabsContent value="transport">
+                    <TransportCalculator onResultChange={setTransResult} />
+                  </TabsContent>
+
+                  <TabsContent value="more" className="mt-0 space-y-6">
+                    <Tabs defaultValue="legal" className="w-full">
+                      <TabsList className="w-full grid grid-cols-3 bg-slate-100 p-1 rounded-lg mb-4">
+                        <TabsTrigger value="legal" className="text-xs sm:text-sm">Rights</TabsTrigger>
+                        <TabsTrigger value="complaint" className="text-xs sm:text-sm">Complaint</TabsTrigger>
+                        <TabsTrigger value="city" className="text-xs sm:text-sm">City Perks</TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="legal" className="mt-0">
+                        <RightsFlashcards />
+                      </TabsContent>
+
+                      <TabsContent value="complaint" className="mt-0">
+                        <ComplaintGenerator />
+                      </TabsContent>
+
+                      <TabsContent value="city" className="mt-0">
+                        <CityOrdinanceChecker />
+                      </TabsContent>
+                    </Tabs>
+
+                    <Separator />
+
+                    {/* About Section moved here */}
+                    <div className="space-y-4 text-slate-600 pt-4">
+                      <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
+                        <Info className="w-5 h-5 text-blue-600" />
+                        About DiscountPH
+                      </h3>
+                      <p className="text-sm leading-relaxed">
+                        This calculator helps Senior Citizens and Persons with Disability (PWD) in the Philippines compute their entitled discounts for medicines, restaurants, groceries, utilities, and travel.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline" className="bg-slate-50">RA 10754</Badge>
+                        <Badge variant="outline" className="bg-slate-50">RA 9994</Badge>
+                        <Badge variant="outline" className="bg-slate-50">JMC 01-2022</Badge>
+                      </div>
+                    </div>
+                  </TabsContent>
+
                   <TabsContent value="about" className="mt-0">
                     <div className="space-y-4 md:space-y-5 lg:space-y-6 text-slate-600">
                       <p className="text-base md:text-lg leading-relaxed">
                         This calculator helps Senior Citizens and Persons with Disability (PWD) in the Philippines compute their entitled discounts for medicines, restaurants, and groceries.
                       </p>
-                      
+
                       {/* Coverage & Legal Information */}
                       <Accordion type="single" collapsible className="w-full">
                         <AccordionItem value="coverage" className="border-2 border-slate-200 rounded-xl overflow-hidden">
@@ -1037,7 +1189,7 @@ export function DiscountCalculator() {
                           </AccordionContent>
                         </AccordionItem>
                       </Accordion>
-                      
+
                       {/* Official Tax Computation Guidelines - The Bible */}
                       <div className="p-4 md:p-6 lg:p-8 rounded-xl bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 border-2 border-purple-300 shadow-lg">
                         <div className="flex items-start gap-3 mb-4">
@@ -1051,7 +1203,7 @@ export function DiscountCalculator() {
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="space-y-3">
                           {/* JMC No. 01-2022 */}
                           <div className="p-4 rounded-lg bg-white border-2 border-purple-200 hover:border-purple-400 transition-colors">
@@ -1064,7 +1216,7 @@ export function DiscountCalculator() {
                                   Joint Memorandum Circular No. 01, Series of 2022
                                 </h5>
                                 <p className="text-xs sm:text-sm text-slate-600 mb-2 leading-relaxed">
-                                  Guidelines on the Provision of Mandatory Statutory Benefits and Privileges for Senior Citizens and PWDs. 
+                                  Guidelines on the Provision of Mandatory Statutory Benefits and Privileges for Senior Citizens and PWDs.
                                   <strong className="text-purple-700"> This is the primary reference for tax computation in both single and group dining scenarios.</strong>
                                 </p>
                                 <p className="text-xs text-slate-500 mb-2">
@@ -1181,7 +1333,7 @@ export function DiscountCalculator() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="p-4 rounded-lg bg-blue-50 border-l-4 border-blue-500">
                             <div className="flex items-start gap-3">
                               <div className="p-1.5 rounded bg-blue-100 flex-shrink-0 mt-0.5">
@@ -1223,7 +1375,7 @@ export function DiscountCalculator() {
                           Note: The tax computation guidelines above apply to both PWDs (RA 10754) and Senior Citizens (RA 9994) as confirmed by the Joint Memorandum Circular No. 01-2022.
                         </p>
                       </div>
-                      
+
                       <div className="p-4 md:p-6 lg:p-8 bg-orange-50 border-2 border-orange-200 rounded-lg space-y-3">
                         <p className="text-sm sm:text-base text-orange-700 font-semibold leading-relaxed">
                           <strong>Service Charge Exemption:</strong> Per the official guidelines above, PWDs and Senior Citizens are <strong>EXEMPT from paying their proportional share of service charges</strong> (not just discounted, but fully exempt). For single purchases, the PWD/Senior pays no service charge. For group dining, only regular diners pay their share of the service charge.
@@ -1237,7 +1389,7 @@ export function DiscountCalculator() {
                           </ul>
                         </div>
                       </div>
-                      
+
                       <p className="text-xs sm:text-sm text-slate-500 italic pt-2">
                         Note: This tool is for estimation purposes. Actual discounts may vary slightly due to rounding. Always refer to the official law for complete details.
                       </p>
@@ -1334,7 +1486,7 @@ export function DiscountCalculator() {
                       >
                         <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
                       </Button>
-                      {(rmResult || gResult) && (
+                      {(rmResult || gResult || medResult || utilResult || transResult) && (
                         <Button
                           type="button"
                           variant="ghost"
@@ -1372,7 +1524,7 @@ export function DiscountCalculator() {
                           <X className="w-4 h-4" />
                         </button>
                       </div>
-                      
+
                       {(() => {
                         const saved = getSavedCalculations()
                         if (saved.length === 0) {
@@ -1382,7 +1534,7 @@ export function DiscountCalculator() {
                             </p>
                           )
                         }
-                        
+
                         return (
                           <div className="space-y-2 max-h-[400px] overflow-y-auto scrollable">
                             {saved.map((calc) => (
@@ -1406,7 +1558,7 @@ export function DiscountCalculator() {
                                       </span>
                                       <span className="text-slate-500 mx-1">·</span>
                                       <span className="text-green-600 text-xs">
-                                        Saved {formatCurrency(calc.results.totalDiscount)}
+                                        Saved {formatCurrency(calc.results.totalDiscount || calc.results.discount5 || 0)}
                                       </span>
                                     </div>
                                   </div>
@@ -1470,7 +1622,7 @@ export function DiscountCalculator() {
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Mixed Transaction Breakdown */}
                       {rmResult.methodUsed === 'mixed' && rmResult.exclusiveAmount && rmResult.sharedAmount && (
                         <div className="space-y-3 bg-indigo-50 border-2 border-indigo-200 p-4 rounded-xl -mx-2 px-4 animate-in fade-in slide-in-from-top-2">
@@ -1478,7 +1630,7 @@ export function DiscountCalculator() {
                             <Sparkles className="w-5 h-5 text-indigo-600" />
                             <p className="font-bold text-indigo-900 text-sm md:text-base">Mixed Transaction Breakdown</p>
                           </div>
-                          
+
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between items-center">
                               <span className="text-indigo-700 font-semibold">Exclusive PWD Items:</span>
@@ -1489,9 +1641,9 @@ export function DiscountCalculator() {
                               <span className="font-mono font-bold text-indigo-900">{formatCurrency(rmResult.sharedAmount)}</span>
                             </div>
                           </div>
-                          
+
                           <Separator className="bg-indigo-200" />
-                          
+
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between items-center text-green-700">
                               <span className="font-semibold">Discount on Exclusive Items:</span>
@@ -1605,10 +1757,10 @@ export function DiscountCalculator() {
                         const proratedVatDiscount = vatAmountPerPerson * eligibleCount
                         const proratedDiscount20 = baseAmountPerPerson * eligibleCount * 0.20
                         const proratedTotalDiscount = proratedVatDiscount + proratedDiscount20
-                        
+
                         const mixedTotalDiscount = rmResult.vatDiscount + rmResult.discount20
                         const difference = mixedTotalDiscount - proratedTotalDiscount
-                        
+
                         return (
                           <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-lg -mx-2 px-4 space-y-2 animate-in fade-in slide-in-from-top-2">
                             <p className="text-sm font-bold text-amber-900 flex items-center gap-2">
@@ -1681,7 +1833,7 @@ export function DiscountCalculator() {
                             <p className="text-xs text-amber-800">
                               Enter the actual amount charged on your receipt to verify accuracy.
                             </p>
-                            
+
                             <div className="space-y-2">
                               <Label htmlFor="receipt-actual-total" className="text-sm font-semibold text-amber-900">
                                 Actual Amount Charged (from receipt)
@@ -1700,7 +1852,7 @@ export function DiscountCalculator() {
                             {receiptActualTotal && parseFloat(receiptActualTotal) > 0 && (
                               <div className="space-y-2 pt-2">
                                 <Separator className="bg-amber-200" />
-                                
+
                                 <div className="grid grid-cols-2 gap-3 text-sm">
                                   <div className="space-y-1">
                                     <p className="text-xs text-amber-700 font-medium">Calculated Amount</p>
@@ -1797,88 +1949,88 @@ export function DiscountCalculator() {
                             <div className="animate-in fade-in slide-in-from-top-2">
                               {/* Visual Progress Bar */}
                               <div className="bg-slate-100 rounded-xl p-4 space-y-3">
-                            <div className="flex justify-between text-xs font-medium text-slate-600">
-                              <span>Payment Distribution</span>
-                              <span>{parseInt(numPwdSenior) + parseInt(numRegular)} diners total</span>
-                            </div>
-                            <div className="relative h-8 bg-white rounded-lg overflow-hidden border-2 border-slate-200">
-                              {(() => {
-                                const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
-                                const baseAmountPerPerson = rmResult.baseAmount / totalGroup
-                                const vatAmountPerPerson = rmResult.vatAmount / totalGroup
-                                
-                                // PWD/Senior total
-                                const pwdCount = parseInt(numPwdSenior) || 0
-                                const pwdBaseTotal = baseAmountPerPerson * pwdCount
-                                const pwdDiscount = pwdBaseTotal * 0.20
-                                const pwdTotal = pwdBaseTotal - pwdDiscount
-                                
-                                // Regular total
-                                const regCount = parseInt(numRegular) || 0
-                                const serviceChargePerReg =
-                                  rmResult.serviceChargeTotal > 0 && regCount > 0
-                                    ? Math.max(rmResult.serviceChargeTotal - rmResult.serviceChargeExemption, 0) / regCount
-                                    : 0
-                                const regTotal = (baseAmountPerPerson + vatAmountPerPerson + serviceChargePerReg) * regCount
-                                
-                                const grandTotal = pwdTotal + regTotal
-                                const pwdPercentage = grandTotal > 0 ? (pwdTotal / grandTotal) * 100 : 0
-                                const regPercentage = grandTotal > 0 ? (regTotal / grandTotal) * 100 : 0
-                                
-                                return (
-                                  <>
-                                    <div 
-                                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center transition-all duration-500"
-                                      style={{ width: `${pwdPercentage}%` }}
-                                    >
-                                      {pwdPercentage > 15 && (
-                                        <span className="text-white text-[11px] font-bold">{pwdPercentage.toFixed(0)}%</span>
-                                      )}
-                                    </div>
-                                    <div 
-                                      className="absolute right-0 top-0 h-full bg-gradient-to-r from-slate-300 to-slate-400 flex items-center justify-center transition-all duration-500"
-                                      style={{ width: `${regPercentage}%` }}
-                                    >
-                                      {regPercentage > 15 && (
-                                        <span className="text-slate-700 text-[11px] font-bold">{regPercentage.toFixed(0)}%</span>
-                                      )}
-                                    </div>
-                                  </>
-                                )
-                              })()}
-                            </div>
-                            <div className="flex items-center justify-between gap-4 text-xs">
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500"></div>
-                                <span className="text-blue-700 font-semibold">
-                                  {parseInt(numPwdSenior)} PWD/Senior ({formatCurrency((() => {
-                                    const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
-                                    const baseAmountPerPerson = rmResult.baseAmount / totalGroup
-                                    const pwdCount = parseInt(numPwdSenior) || 0
-                                    const pwdBaseTotal = baseAmountPerPerson * pwdCount
-                                    const pwdDiscount = pwdBaseTotal * 0.20
-                                    return pwdBaseTotal - pwdDiscount
-                                  })())})
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full bg-gradient-to-r from-slate-300 to-slate-400"></div>
-                                <span className="text-slate-700 font-semibold">
-                                  {parseInt(numRegular)} Regular ({formatCurrency((() => {
+                                <div className="flex justify-between text-xs font-medium text-slate-600">
+                                  <span>Payment Distribution</span>
+                                  <span>{parseInt(numPwdSenior) + parseInt(numRegular)} diners total</span>
+                                </div>
+                                <div className="relative h-8 bg-white rounded-lg overflow-hidden border-2 border-slate-200">
+                                  {(() => {
                                     const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
                                     const baseAmountPerPerson = rmResult.baseAmount / totalGroup
                                     const vatAmountPerPerson = rmResult.vatAmount / totalGroup
+
+                                    // PWD/Senior total
+                                    const pwdCount = parseInt(numPwdSenior) || 0
+                                    const pwdBaseTotal = baseAmountPerPerson * pwdCount
+                                    const pwdDiscount = pwdBaseTotal * 0.20
+                                    const pwdTotal = pwdBaseTotal - pwdDiscount
+
+                                    // Regular total
                                     const regCount = parseInt(numRegular) || 0
                                     const serviceChargePerReg =
                                       rmResult.serviceChargeTotal > 0 && regCount > 0
                                         ? Math.max(rmResult.serviceChargeTotal - rmResult.serviceChargeExemption, 0) / regCount
                                         : 0
-                                    return (baseAmountPerPerson + vatAmountPerPerson + serviceChargePerReg) * regCount
-                                  })())})
-                                </span>
+                                    const regTotal = (baseAmountPerPerson + vatAmountPerPerson + serviceChargePerReg) * regCount
+
+                                    const grandTotal = pwdTotal + regTotal
+                                    const pwdPercentage = grandTotal > 0 ? (pwdTotal / grandTotal) * 100 : 0
+                                    const regPercentage = grandTotal > 0 ? (regTotal / grandTotal) * 100 : 0
+
+                                    return (
+                                      <>
+                                        <div
+                                          className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-400 to-indigo-500 flex items-center justify-center transition-all duration-500"
+                                          style={{ width: `${pwdPercentage}%` }}
+                                        >
+                                          {pwdPercentage > 15 && (
+                                            <span className="text-white text-[11px] font-bold">{pwdPercentage.toFixed(0)}%</span>
+                                          )}
+                                        </div>
+                                        <div
+                                          className="absolute right-0 top-0 h-full bg-gradient-to-r from-slate-300 to-slate-400 flex items-center justify-center transition-all duration-500"
+                                          style={{ width: `${regPercentage}%` }}
+                                        >
+                                          {regPercentage > 15 && (
+                                            <span className="text-slate-700 text-[11px] font-bold">{regPercentage.toFixed(0)}%</span>
+                                          )}
+                                        </div>
+                                      </>
+                                    )
+                                  })()}
+                                </div>
+                                <div className="flex items-center justify-between gap-4 text-xs">
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+                                    <span className="text-blue-700 font-semibold">
+                                      {parseInt(numPwdSenior)} PWD/Senior ({formatCurrency((() => {
+                                        const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
+                                        const baseAmountPerPerson = rmResult.baseAmount / totalGroup
+                                        const pwdCount = parseInt(numPwdSenior) || 0
+                                        const pwdBaseTotal = baseAmountPerPerson * pwdCount
+                                        const pwdDiscount = pwdBaseTotal * 0.20
+                                        return pwdBaseTotal - pwdDiscount
+                                      })())})
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-gradient-to-r from-slate-300 to-slate-400"></div>
+                                    <span className="text-slate-700 font-semibold">
+                                      {parseInt(numRegular)} Regular ({formatCurrency((() => {
+                                        const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
+                                        const baseAmountPerPerson = rmResult.baseAmount / totalGroup
+                                        const vatAmountPerPerson = rmResult.vatAmount / totalGroup
+                                        const regCount = parseInt(numRegular) || 0
+                                        const serviceChargePerReg =
+                                          rmResult.serviceChargeTotal > 0 && regCount > 0
+                                            ? Math.max(rmResult.serviceChargeTotal - rmResult.serviceChargeExemption, 0) / regCount
+                                            : 0
+                                        return (baseAmountPerPerson + vatAmountPerPerson + serviceChargePerReg) * regCount
+                                      })())})
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </div>
                             </div>
                           )}
 
@@ -1897,154 +2049,154 @@ export function DiscountCalculator() {
                             <div className="animate-in fade-in slide-in-from-top-2">
                               {/* Mobile: horizontal scroll, Desktop: grid */}
                               <div className="overflow-x-auto md:overflow-visible -mx-2 px-2 scrollable">
-                            <div className="flex md:grid md:grid-cols-2 gap-3 min-w-full md:min-w-0" style={{scrollSnapType: 'x mandatory'}}>
-                              {/* PWD/Senior Cards */}
-                              {Array.from({length: parseInt(numPwdSenior) || 0}).map((_, idx) => {
-                                const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
-                                const baseAmountPerPerson = rmResult.baseAmount / totalGroup
-                                const vatAmountPerPerson = rmResult.vatAmount / totalGroup
-                                const pwdDiscount = baseAmountPerPerson * 0.20
-                                const pwdTotal = baseAmountPerPerson - pwdDiscount
-                                const personId = `pwd-${idx}`
-                                const isExpanded = expandedPersonId === personId
+                                <div className="flex md:grid md:grid-cols-2 gap-3 min-w-full md:min-w-0" style={{ scrollSnapType: 'x mandatory' }}>
+                                  {/* PWD/Senior Cards */}
+                                  {Array.from({ length: parseInt(numPwdSenior) || 0 }).map((_, idx) => {
+                                    const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
+                                    const baseAmountPerPerson = rmResult.baseAmount / totalGroup
+                                    const vatAmountPerPerson = rmResult.vatAmount / totalGroup
+                                    const pwdDiscount = baseAmountPerPerson * 0.20
+                                    const pwdTotal = baseAmountPerPerson - pwdDiscount
+                                    const personId = `pwd-${idx}`
+                                    const isExpanded = expandedPersonId === personId
 
-                                return (
-                                  <div key={personId} className="flex-shrink-0 w-[85vw] md:w-auto" style={{scrollSnapAlign: 'start'}}>
-                                    <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 h-full">
-                                      <div className="flex items-start justify-between mb-3">
-                                        <div>
-                                          <p className="text-xs text-blue-600 font-bold mb-0.5">Senior/PWD #{idx + 1}</p>
-                                          <p className="text-[10px] text-blue-500">VAT-exempt + 20% discount</p>
-                                        </div>
-                                        <Badge className="bg-blue-600 text-white hover:bg-blue-600 h-5 px-1.5 text-[10px]">EXEMPT</Badge>
-                                      </div>
-                                      
-                                      <p className="text-3xl font-bold text-blue-900 mb-3">
-                                        {formatCurrency(pwdTotal)}
-                                      </p>
+                                    return (
+                                      <div key={personId} className="flex-shrink-0 w-[85vw] md:w-auto" style={{ scrollSnapAlign: 'start' }}>
+                                        <div className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 h-full">
+                                          <div className="flex items-start justify-between mb-3">
+                                            <div>
+                                              <p className="text-xs text-blue-600 font-bold mb-0.5">Senior/PWD #{idx + 1}</p>
+                                              <p className="text-[10px] text-blue-500">VAT-exempt + 20% discount</p>
+                                            </div>
+                                            <Badge className="bg-blue-600 text-white hover:bg-blue-600 h-5 px-1.5 text-[10px]">EXEMPT</Badge>
+                                          </div>
 
-                                      <button
-                                        onClick={() => setExpandedPersonId(isExpanded ? null : personId)}
-                                        className="w-full flex items-center justify-between text-xs text-blue-700 font-medium mb-2 touch-manipulation min-h-[44px] py-2"
-                                      >
-                                        <span>View breakdown</span>
-                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                      </button>
+                                          <p className="text-3xl font-bold text-blue-900 mb-3">
+                                            {formatCurrency(pwdTotal)}
+                                          </p>
 
-                                      {isExpanded && (
-                                        <div className="space-y-2 text-xs text-blue-800 mb-3 animate-in fade-in slide-in-from-top-2">
-                                          <div className="flex justify-between py-1">
-                                            <span>Base amount:</span>
-                                            <span className="font-mono">{formatCurrency(baseAmountPerPerson)}</span>
-                                          </div>
-                                          <div className="flex justify-between py-1 text-green-700">
-                                            <span>Less: 20% discount</span>
-                                            <span className="font-mono">-{formatCurrency(pwdDiscount)}</span>
-                                          </div>
-                                          <div className="flex justify-between py-1 text-blue-600">
-                                            <span>VAT exemption:</span>
-                                            <span className="font-mono">-{formatCurrency(vatAmountPerPerson)}</span>
-                                          </div>
-                                          {rmResult.serviceChargeExemption > 0 && (
-                                            <div className="flex justify-between py-1 text-purple-600">
-                                              <span>Service charge exempt:</span>
-                                              <span className="font-mono">-{formatCurrency(rmResult.serviceChargeExemption / parseInt(numPwdSenior))}</span>
+                                          <button
+                                            onClick={() => setExpandedPersonId(isExpanded ? null : personId)}
+                                            className="w-full flex items-center justify-between text-xs text-blue-700 font-medium mb-2 touch-manipulation min-h-[44px] py-2"
+                                          >
+                                            <span>View breakdown</span>
+                                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                          </button>
+
+                                          {isExpanded && (
+                                            <div className="space-y-2 text-xs text-blue-800 mb-3 animate-in fade-in slide-in-from-top-2">
+                                              <div className="flex justify-between py-1">
+                                                <span>Base amount:</span>
+                                                <span className="font-mono">{formatCurrency(baseAmountPerPerson)}</span>
+                                              </div>
+                                              <div className="flex justify-between py-1 text-green-700">
+                                                <span>Less: 20% discount</span>
+                                                <span className="font-mono">-{formatCurrency(pwdDiscount)}</span>
+                                              </div>
+                                              <div className="flex justify-between py-1 text-blue-600">
+                                                <span>VAT exemption:</span>
+                                                <span className="font-mono">-{formatCurrency(vatAmountPerPerson)}</span>
+                                              </div>
+                                              {rmResult.serviceChargeExemption > 0 && (
+                                                <div className="flex justify-between py-1 text-purple-600">
+                                                  <span>Service charge exempt:</span>
+                                                  <span className="font-mono">-{formatCurrency(rmResult.serviceChargeExemption / parseInt(numPwdSenior))}</span>
+                                                </div>
+                                              )}
                                             </div>
                                           )}
+
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="w-full bg-white hover:bg-blue-100 border-blue-300 text-blue-700 touch-manipulation min-h-[44px]"
+                                            onClick={() => copyToClipboard(pwdTotal.toFixed(2), personId)}
+                                          >
+                                            {copiedId === personId ? (
+                                              <><Check className="w-4 h-4 mr-2" /> Copied!</>
+                                            ) : (
+                                              <><Copy className="w-4 h-4 mr-2" /> Copy Amount</>
+                                            )}
+                                          </Button>
                                         </div>
-                                      )}
-
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full bg-white hover:bg-blue-100 border-blue-300 text-blue-700 touch-manipulation min-h-[44px]"
-                                        onClick={() => copyToClipboard(pwdTotal.toFixed(2), personId)}
-                                      >
-                                        {copiedId === personId ? (
-                                          <><Check className="w-4 h-4 mr-2" /> Copied!</>
-                                        ) : (
-                                          <><Copy className="w-4 h-4 mr-2" /> Copy Amount</>
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-
-                              {/* Regular Diner Cards */}
-                              {Array.from({length: parseInt(numRegular) || 0}).map((_, idx) => {
-                                const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
-                                const baseAmountPerPerson = rmResult.baseAmount / totalGroup
-                                const vatAmountPerPerson = rmResult.vatAmount / totalGroup
-                                const regularCount = Math.max(parseInt(numRegular) || 0, 1)
-                                const serviceChargePerPerson =
-                                  rmResult.serviceChargeTotal > 0
-                                    ? Math.max(rmResult.serviceChargeTotal - rmResult.serviceChargeExemption, 0) / regularCount
-                                    : 0
-                                const regTotal = baseAmountPerPerson + vatAmountPerPerson + serviceChargePerPerson
-                                const personId = `reg-${idx}`
-                                const isExpanded = expandedPersonId === personId
-
-                                return (
-                                  <div key={personId} className="flex-shrink-0 w-[85vw] md:w-auto" style={{scrollSnapAlign: 'start'}}>
-                                    <div className="p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 h-full">
-                                      <div className="flex items-start justify-between mb-3">
-                                        <div>
-                                          <p className="text-xs text-slate-700 font-bold mb-0.5">Regular Diner #{idx + 1}</p>
-                                          <p className="text-[10px] text-slate-500">Full price + VAT + Service charge</p>
-                                        </div>
-                                        <Badge variant="outline" className="h-5 px-1.5 text-[10px] border-slate-300">REGULAR</Badge>
                                       </div>
-                                      
-                                      <p className="text-3xl font-bold text-slate-900 mb-3">
-                                        {formatCurrency(regTotal)}
-                                      </p>
+                                    )
+                                  })}
 
-                                      <button
-                                        onClick={() => setExpandedPersonId(isExpanded ? null : personId)}
-                                        className="w-full flex items-center justify-between text-xs text-slate-700 font-medium mb-2 touch-manipulation min-h-[44px] py-2"
-                                      >
-                                        <span>View breakdown</span>
-                                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                      </button>
+                                  {/* Regular Diner Cards */}
+                                  {Array.from({ length: parseInt(numRegular) || 0 }).map((_, idx) => {
+                                    const totalGroup = Math.max(parseInt(numPwdSenior) + parseInt(numRegular), 1)
+                                    const baseAmountPerPerson = rmResult.baseAmount / totalGroup
+                                    const vatAmountPerPerson = rmResult.vatAmount / totalGroup
+                                    const regularCount = Math.max(parseInt(numRegular) || 0, 1)
+                                    const serviceChargePerPerson =
+                                      rmResult.serviceChargeTotal > 0
+                                        ? Math.max(rmResult.serviceChargeTotal - rmResult.serviceChargeExemption, 0) / regularCount
+                                        : 0
+                                    const regTotal = baseAmountPerPerson + vatAmountPerPerson + serviceChargePerPerson
+                                    const personId = `reg-${idx}`
+                                    const isExpanded = expandedPersonId === personId
 
-                                      {isExpanded && (
-                                        <div className="space-y-2 text-xs text-slate-700 mb-3 animate-in fade-in slide-in-from-top-2">
-                                          <div className="flex justify-between py-1">
-                                            <span>Base amount:</span>
-                                            <span className="font-mono">{formatCurrency(baseAmountPerPerson)}</span>
+                                    return (
+                                      <div key={personId} className="flex-shrink-0 w-[85vw] md:w-auto" style={{ scrollSnapAlign: 'start' }}>
+                                        <div className="p-4 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 border-2 border-slate-200 h-full">
+                                          <div className="flex items-start justify-between mb-3">
+                                            <div>
+                                              <p className="text-xs text-slate-700 font-bold mb-0.5">Regular Diner #{idx + 1}</p>
+                                              <p className="text-[10px] text-slate-500">Full price + VAT + Service charge</p>
+                                            </div>
+                                            <Badge variant="outline" className="h-5 px-1.5 text-[10px] border-slate-300">REGULAR</Badge>
                                           </div>
-                                          <div className="flex justify-between py-1">
-                                            <span>Add: VAT (12%):</span>
-                                            <span className="font-mono">+{formatCurrency(vatAmountPerPerson)}</span>
-                                          </div>
-                                          {serviceChargePerPerson > 0 && (
-                                            <div className="flex justify-between py-1 text-orange-600">
-                                              <span>Add: Service charge:</span>
-                                              <span className="font-mono">+{formatCurrency(serviceChargePerPerson)}</span>
+
+                                          <p className="text-3xl font-bold text-slate-900 mb-3">
+                                            {formatCurrency(regTotal)}
+                                          </p>
+
+                                          <button
+                                            onClick={() => setExpandedPersonId(isExpanded ? null : personId)}
+                                            className="w-full flex items-center justify-between text-xs text-slate-700 font-medium mb-2 touch-manipulation min-h-[44px] py-2"
+                                          >
+                                            <span>View breakdown</span>
+                                            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                          </button>
+
+                                          {isExpanded && (
+                                            <div className="space-y-2 text-xs text-slate-700 mb-3 animate-in fade-in slide-in-from-top-2">
+                                              <div className="flex justify-between py-1">
+                                                <span>Base amount:</span>
+                                                <span className="font-mono">{formatCurrency(baseAmountPerPerson)}</span>
+                                              </div>
+                                              <div className="flex justify-between py-1">
+                                                <span>Add: VAT (12%):</span>
+                                                <span className="font-mono">+{formatCurrency(vatAmountPerPerson)}</span>
+                                              </div>
+                                              {serviceChargePerPerson > 0 && (
+                                                <div className="flex justify-between py-1 text-orange-600">
+                                                  <span>Add: Service charge:</span>
+                                                  <span className="font-mono">+{formatCurrency(serviceChargePerPerson)}</span>
+                                                </div>
+                                              )}
                                             </div>
                                           )}
-                                        </div>
-                                      )}
 
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full bg-white hover:bg-slate-200 border-slate-300 text-slate-700 touch-manipulation min-h-[44px]"
-                                        onClick={() => copyToClipboard(regTotal.toFixed(2), personId)}
-                                      >
-                                        {copiedId === personId ? (
-                                          <><Check className="w-4 h-4 mr-2" /> Copied!</>
-                                        ) : (
-                                          <><Copy className="w-4 h-4 mr-2" /> Copy Amount</>
-                                        )}
-                                      </Button>
-                                    </div>
-                                  </div>
-                                )
-                              })}
-                            </div>
-                          </div>
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="w-full bg-white hover:bg-slate-200 border-slate-300 text-slate-700 touch-manipulation min-h-[44px]"
+                                            onClick={() => copyToClipboard(regTotal.toFixed(2), personId)}
+                                          >
+                                            {copiedId === personId ? (
+                                              <><Check className="w-4 h-4 mr-2" /> Copied!</>
+                                            ) : (
+                                              <><Copy className="w-4 h-4 mr-2" /> Copy Amount</>
+                                            )}
+                                          </Button>
+                                        </div>
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -2088,8 +2240,157 @@ export function DiscountCalculator() {
                     </div>
                   )}
 
+                  {/* Medicine Results */}
+                  {activeTab === 'medicine' && medResult && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-slate-600 text-base">
+                        <span>Base Amount</span>
+                        <span className="font-bold font-mono">{formatCurrency(medResult.baseAmount)}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-500 text-sm">
+                        <span>VAT (12%)</span>
+                        <span className="font-mono">+{formatCurrency(medResult.vatAmount)}</span>
+                      </div>
+
+                      <Separator className="my-2" />
+
+                      <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg -mx-2 px-4">
+                        <span className="flex items-center gap-2 text-blue-700 font-semibold">
+                          <Badge className="bg-blue-600 text-white hover:bg-blue-600 h-6 px-2 text-xs">
+                            EXEMPT
+                          </Badge>
+                          VAT Exemption
+                        </span>
+                        <span className="font-mono font-bold text-blue-700">-{formatCurrency(medResult.vatDiscount)}</span>
+                      </div>
+
+                      <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg -mx-2 px-4">
+                        <span className="flex items-center gap-2 text-green-700 font-semibold">
+                          <Badge className="bg-green-600 text-white hover:bg-green-600 h-6 px-2 text-xs">
+                            20% OFF
+                          </Badge>
+                          Discount
+                        </span>
+                        <span className="font-mono font-bold text-green-700">-{formatCurrency(medResult.discount20)}</span>
+                      </div>
+
+                      <Separator className="my-4" />
+
+                      <div className="pt-2">
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-slate-500 font-semibold text-xs sm:text-sm uppercase tracking-wide">Total Payable</span>
+                          <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                            {formatCurrency(medResult.amountToPay)}
+                          </span>
+                        </div>
+                        <p className="text-right text-sm text-green-600 font-semibold">
+                          You saved {formatCurrency(medResult.totalSaved)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Utilities Results */}
+                  {activeTab === 'utilities' && utilResult && (
+                    <div className="space-y-4">
+                      {utilResult.eligible ? (
+                        <>
+                          <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg -mx-2 px-4">
+                            <span className="flex items-center gap-2 text-green-700 font-semibold">
+                              <Badge className="bg-green-600 text-white hover:bg-green-600 h-6 px-2 text-xs">
+                                5% OFF
+                              </Badge>
+                              Discount
+                            </span>
+                            <span className="font-mono font-bold text-green-700">-{formatCurrency(utilResult.discount5)}</span>
+                          </div>
+
+                          <Separator className="my-4" />
+
+                          <div className="pt-2">
+                            <div className="flex justify-between items-baseline mb-2">
+                              <span className="text-slate-500 font-semibold text-xs sm:text-sm uppercase tracking-wide">Total Payable</span>
+                              <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                                {formatCurrency(utilResult.amountToPay)}
+                              </span>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-slate-700 font-medium mb-2">
+                            Not eligible for discount
+                          </p>
+                          <Badge variant="outline" className="text-red-600 border-red-200 bg-red-50">
+                            {utilResult.reason}
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Transport Results */}
+                  {activeTab === 'transport' && transResult && (
+                    <div className="space-y-4">
+                      <div className="flex justify-between text-slate-600 text-base">
+                        <span>Base Fare</span>
+                        <span className="font-bold font-mono">{formatCurrency(transResult.baseAmount)}</span>
+                      </div>
+                      {transResult.vatAmount > 0 && (
+                        <div className="flex justify-between text-slate-500 text-sm">
+                          <span>VAT (12%)</span>
+                          <span className="font-mono">+{formatCurrency(transResult.vatAmount)}</span>
+                        </div>
+                      )}
+                      {transResult.taxesFees > 0 && (
+                        <div className="flex justify-between text-slate-600 text-base">
+                          <span>Taxes & Fees</span>
+                          <span className="font-mono">{formatCurrency(transResult.taxesFees)}</span>
+                        </div>
+                      )}
+
+                      <Separator className="my-2" />
+
+                      {transResult.vatDiscount > 0 && (
+                        <div className="flex justify-between items-center bg-blue-50 p-3 rounded-lg -mx-2 px-4">
+                          <span className="flex items-center gap-2 text-blue-700 font-semibold">
+                            <Badge className="bg-blue-600 text-white hover:bg-blue-600 h-6 px-2 text-xs">
+                              EXEMPT
+                            </Badge>
+                            VAT Exemption
+                          </span>
+                          <span className="font-mono font-bold text-blue-700">-{formatCurrency(transResult.vatDiscount)}</span>
+                        </div>
+                      )}
+
+                      <div className="flex justify-between items-center bg-green-50 p-3 rounded-lg -mx-2 px-4">
+                        <span className="flex items-center gap-2 text-green-700 font-semibold">
+                          <Badge className="bg-green-600 text-white hover:bg-green-600 h-6 px-2 text-xs">
+                            20% OFF
+                          </Badge>
+                          Discount
+                        </span>
+                        <span className="font-mono font-bold text-green-700">-{formatCurrency(transResult.discount20)}</span>
+                      </div>
+
+                      <Separator className="my-4" />
+
+                      <div className="pt-2">
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-slate-500 font-semibold text-xs sm:text-sm uppercase tracking-wide">Total Payable</span>
+                          <span className="text-2xl sm:text-3xl md:text-4xl font-bold text-slate-900 tracking-tight">
+                            {formatCurrency(transResult.amountToPay)}
+                          </span>
+                        </div>
+                        <p className="text-right text-sm text-green-600 font-semibold">
+                          You saved {formatCurrency(transResult.totalSaved)}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Empty State */}
-                  {!rmResult && !gResult && (
+                  {!rmResult && !gResult && !medResult && !utilResult && !transResult && (
                     <div className="text-center py-12 space-y-3">
                       <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center">
                         <Receipt className="w-8 h-8 text-slate-400" />
@@ -2110,6 +2411,7 @@ export function DiscountCalculator() {
           </div>
         </div>
       </div>
+      <AiAssistant />
     </div>
   )
 }

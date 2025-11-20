@@ -4,9 +4,9 @@
 export interface SavedCalculation {
   id: string
   timestamp: number
-  type: 'restaurant' | 'groceries'
+  type: 'restaurant' | 'groceries' | 'medicine' | 'utilities' | 'transport'
   inputs: {
-    amount: string
+    amount?: string
     pwdCount?: string
     regCount?: string
     isRestaurant?: boolean
@@ -16,6 +16,12 @@ export interface SavedCalculation {
     serviceChargeExcluded?: string
     manualScAmount?: string
     gRemaining?: string
+    utilType?: 'electricity' | 'water'
+    utilConsumption?: string
+    transMode?: 'airsea' | 'land'
+    transBaseFare?: string
+    transTaxesFees?: string
+    transLandFare?: string
   }
   results: {
     baseAmount?: number
@@ -26,9 +32,13 @@ export interface SavedCalculation {
     vatDiscount?: number
     discount20?: number
     serviceChargeExemption?: number
-    totalDiscount: number
+    totalDiscount?: number
     amountToPay: number
     discount5?: number
+    totalSaved?: number
+    eligible?: boolean
+    reason?: string
+    taxesFees?: number
   }
 }
 
@@ -43,7 +53,7 @@ export function saveCalculation(calculation: Omit<SavedCalculation, 'id' | 'time
       id: `calc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       timestamp: Date.now()
     }
-    
+
     // Add to beginning and limit to MAX_SAVED
     const updated = [newCalculation, ...saved].slice(0, MAX_SAVED)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
@@ -96,11 +106,12 @@ export function formatCalculationForSharing(calculation: SavedCalculation): stri
     dateStyle: 'medium',
     timeStyle: 'short'
   })
-  
+
   let text = `PWD/Senior Discount Calculation\n`
   text += `Date: ${date}\n\n`
-  
+
   if (calculation.type === 'restaurant') {
+    text += `Type: Dining\n`
     text += `Bill Amount: ₱${calculation.inputs.amount}\n`
     if (calculation.inputs.isRestaurant) {
       text += `PWD/Senior: ${calculation.inputs.pwdCount} pax\n`
@@ -111,15 +122,44 @@ export function formatCalculationForSharing(calculation: SavedCalculation): stri
     }
     text += `\n`
     text += `Total to Pay: ₱${calculation.results.amountToPay.toFixed(2)}\n`
-    text += `Total Saved: ₱${calculation.results.totalDiscount.toFixed(2)}\n`
-  } else {
+    text += `Total Saved: ₱${calculation.results.totalDiscount?.toFixed(2)}\n`
+  } else if (calculation.type === 'groceries') {
+    text += `Type: Grocery\n`
     text += `Grocery Amount: ₱${calculation.inputs.amount}\n`
     text += `Weekly Allowance: ₱${calculation.inputs.gRemaining}\n`
     text += `\n`
     text += `Total to Pay: ₱${calculation.results.amountToPay.toFixed(2)}\n`
     text += `Discount: ₱${calculation.results.discount5?.toFixed(2) || '0.00'}\n`
+  } else if (calculation.type === 'medicine') {
+    text += `Type: Medicine\n`
+    text += `Amount: ₱${calculation.inputs.amount}\n`
+    text += `\n`
+    text += `Total to Pay: ₱${calculation.results.amountToPay.toFixed(2)}\n`
+    text += `Total Saved: ₱${calculation.results.totalSaved?.toFixed(2)}\n`
+  } else if (calculation.type === 'utilities') {
+    text += `Type: Utilities (${calculation.inputs.utilType})\n`
+    text += `Consumption: ${calculation.inputs.utilConsumption} ${calculation.inputs.utilType === 'electricity' ? 'kWh' : 'cu.m.'}\n`
+    text += `Bill Amount: ₱${calculation.inputs.amount}\n`
+    text += `\n`
+    if (calculation.results.eligible) {
+      text += `Total to Pay: ₱${calculation.results.amountToPay.toFixed(2)}\n`
+      text += `Discount: ₱${calculation.results.discount5?.toFixed(2)}\n`
+    } else {
+      text += `Not Eligible: ${calculation.results.reason}\n`
+    }
+  } else if (calculation.type === 'transport') {
+    text += `Type: Transport (${calculation.inputs.transMode === 'airsea' ? 'Air/Sea' : 'Land'})\n`
+    if (calculation.inputs.transMode === 'airsea') {
+      text += `Base Fare: ₱${calculation.inputs.transBaseFare}\n`
+      text += `Taxes & Fees: ₱${calculation.inputs.transTaxesFees}\n`
+    } else {
+      text += `Fare: ₱${calculation.inputs.transLandFare}\n`
+    }
+    text += `\n`
+    text += `Total to Pay: ₱${calculation.results.amountToPay.toFixed(2)}\n`
+    text += `Total Saved: ₱${calculation.results.totalSaved?.toFixed(2)}\n`
   }
-  
+
   return text
 }
 

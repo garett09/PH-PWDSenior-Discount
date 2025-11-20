@@ -111,6 +111,53 @@ export function AiAssistant() {
         }
     }, [isOpen, isMinimized])
 
+    // Track viewport height to offset keyboard overlap on mobile
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+
+        const updateViewport = () => {
+            setWindowHeight(window.innerHeight)
+            if (window.visualViewport) {
+                setViewportHeight(window.visualViewport.height)
+            } else {
+                setViewportHeight(window.innerHeight)
+            }
+        }
+
+        const updateIsMobile = () => {
+            setIsMobileViewport(window.innerWidth < 768)
+        }
+
+        updateViewport()
+        updateIsMobile()
+
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', updateViewport)
+            window.visualViewport.addEventListener('scroll', updateViewport)
+        } else {
+            window.addEventListener('resize', updateViewport)
+        }
+        window.addEventListener('resize', updateIsMobile)
+
+        return () => {
+            if (window.visualViewport) {
+                window.visualViewport.removeEventListener('resize', updateViewport)
+                window.visualViewport.removeEventListener('scroll', updateViewport)
+            } else {
+                window.removeEventListener('resize', updateViewport)
+            }
+            window.removeEventListener('resize', updateIsMobile)
+        }
+    }, [])
+
+    const keyboardOffset =
+        !isMinimized &&
+        isMobileViewport &&
+        windowHeight !== null &&
+        viewportHeight !== null
+            ? Math.max(windowHeight - viewportHeight, 0)
+            : 0
+
     const handleSend = async () => {
         if (!input.trim() || isLoading) return
 

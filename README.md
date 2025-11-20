@@ -4,7 +4,6 @@
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.0-black)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19.2-blue)](https://react.dev/)
-[![Capacitor](https://img.shields.io/badge/Capacitor-6.2-blue)](https://capacitorjs.com/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 ## 🌟 Features
@@ -15,21 +14,18 @@
 - 👥 **Group Dining** - Split bills accurately between PWD/Senior and regular diners
 - 📊 **Detailed Breakdowns** - See exactly how discounts are calculated
 - 💾 **Save Calculations** - Store and review past calculations (local storage)
-- 📤 **Share Results** - Native share functionality for iOS/Android
+- 📤 **Share Results** - Native share functionality using Web Share API
 - 🔍 **Receipt Comparison** - Audit mode to compare with actual receipts
 - 📱 **Mobile-First** - Optimized for iPhone and Android
 - 🌐 **Works Offline** - No internet required, all calculations are local
 - 🎨 **Modern UI** - Beautiful, intuitive interface with Simple/Advanced modes
 
-## 🚀 Platforms
+## 🚀 Platform
 
 ### Web App
 Live at: [Your Vercel URL]
 
-### iOS App
-Available on the App Store (coming soon)
-
-See [QUICKSTART_IOS.md](QUICKSTART_IOS.md) for iOS setup instructions.
+Optimized for mobile devices with a native app-like experience.
 
 ## 📱 Screenshots
 
@@ -41,8 +37,7 @@ See [QUICKSTART_IOS.md](QUICKSTART_IOS.md) for iOS setup instructions.
 - **Styling**: Tailwind CSS 4
 - **UI Components**: Radix UI
 - **Icons**: Lucide React
-- **Mobile**: Capacitor 6 (iOS/Android)
-- **Deployment**: Vercel (Web), App Store (iOS)
+- **Deployment**: Vercel (Web)
 
 ## 🏃 Getting Started
 
@@ -50,7 +45,6 @@ See [QUICKSTART_IOS.md](QUICKSTART_IOS.md) for iOS setup instructions.
 
 - Node.js 18+ 
 - npm or yarn
-- For iOS: macOS, Xcode, CocoaPods
 
 ### Installation
 
@@ -77,21 +71,6 @@ npm run build
 # Start production server
 npm start
 ```
-
-### Build iOS App
-
-See [QUICKSTART_IOS.md](QUICKSTART_IOS.md) for detailed instructions.
-
-```bash
-# Build and sync to iOS
-npm run ios:build
-```
-
-## 📖 Documentation
-
-- [Quick Start: iOS Setup](QUICKSTART_IOS.md) - Get the iOS app running quickly
-- [Complete iOS Guide](IOS_SETUP.md) - Detailed iOS development and App Store submission
-- [iOS Resources](ios-resources/README.md) - App icons, privacy manifest, and assets
 
 ## 🧮 How It Works
 

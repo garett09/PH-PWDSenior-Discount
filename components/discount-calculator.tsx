@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 // Modern Switch component - Polished and works great on mobile and web
-// Optimized for iOS 44x44pt minimum touch target
+// Optimized for mobile touch targets (44x44pt minimum)
 function CustomSwitch({ checked, onCheckedChange, id }: { checked: boolean; onCheckedChange: (c: boolean) => void; id: string }) {
   return (
     <button

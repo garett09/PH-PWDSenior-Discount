@@ -7,7 +7,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Disable trailing slashes for Capacitor
+  // Trailing slashes for better static export compatibility
   trailingSlash: true,
 }
 

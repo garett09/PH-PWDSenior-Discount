@@ -1,5 +1,5 @@
 // Storage utilities for saving/loading calculations
-// Works on web and iOS via Capacitor (localStorage is natively supported)
+// Uses browser localStorage (works on all modern browsers)
 
 export interface SavedCalculation {
   id: string

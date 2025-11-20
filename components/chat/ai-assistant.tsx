@@ -136,7 +136,12 @@ export function AiAssistant() {
                             role: 'user',
                             parts: [{ text: SYSTEM_PROMPT + "\n\nUser Question: " + userMessage }]
                         }
-                    ]
+                    ],
+                    generationConfig: {
+                        thinkingConfig: {
+                            thinkingLevel: 'low'
+                        }
+                    }
                 })
             })
 

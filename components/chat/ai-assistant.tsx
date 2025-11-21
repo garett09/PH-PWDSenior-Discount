@@ -376,6 +376,15 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
             viewportHeight !== null
             ? Math.max(windowHeight - viewportHeight, 0)
             : 0
+    const containerClasses = cn(
+        'fixed z-50 transition-all duration-300 ease-in-out shadow-2xl',
+        isMinimized
+            ? 'bottom-6 right-6 w-72 rounded-xl'
+            : isMobileViewport
+                ? 'inset-0 w-full h-full rounded-none'
+                : 'inset-0 md:inset-auto md:bottom-6 md:right-6 w-full h-full md:w-[400px] md:h-[600px] md:rounded-xl'
+    )
+    const footerPaddingStyle = isMobileViewport ? { paddingBottom: 12 + keyboardOffset } : undefined
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -591,20 +600,19 @@ ${activeMode.promptAddendum}
             <Button
                 onClick={() => setIsOpen(true)}
                 className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white z-50 transition-all hover:scale-105"
+                title="Scan receipts or ask DiscountPH AI about RA 10754/RA 9994"
             >
                 <MessageCircle className="h-7 w-7" />
-                <span className="sr-only">Open AI Assistant</span>
+                <span className="sr-only">Open DiscountPH AI for receipt scans & legal help</span>
             </Button>
         )
     }
 
     return (
-        <div className={cn(
-            "fixed z-50 transition-all duration-300 ease-in-out shadow-2xl",
-            isMinimized
-                ? "bottom-6 right-6 w-72 rounded-xl"
-                : "inset-0 md:inset-auto md:bottom-6 md:right-6 w-full h-full md:w-[400px] md:h-[600px] md:rounded-xl"
-        )} style={!isMinimized ? { bottom: keyboardOffset } : undefined}>
+        <div
+            className={containerClasses}
+            style={!isMinimized ? { bottom: isMobileViewport ? 0 : keyboardOffset } : undefined}
+        >
             <Card className="w-full h-full flex flex-col border-0 md:border border-blue-200 overflow-hidden rounded-none md:rounded-xl">
                 <CardHeader className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white flex flex-row items-center justify-between space-y-0 shrink-0">
                     <div className="flex items-center gap-2">
@@ -613,10 +621,46 @@ ${activeMode.promptAddendum}
                         </div>
                         <div>
                             <CardTitle className="text-base font-bold">DiscountPH AI</CardTitle>
-                            <CardDescription className="text-blue-100 text-xs">Ask about laws & benefits</CardDescription>
+                            <CardDescription className="text-blue-100 text-xs">Upload receipts • Cite RA 10754 & RA 9994</CardDescription>
                         </div>
                     </div>
                     <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                'h-8 w-8 text-blue-100 hover:text-white hover:bg-white/20',
+                                isHistoryOpen && 'bg-white/20 text-white'
+                            )}
+                            onClick={() => setIsHistoryOpen(prev => !prev)}
+                            title="View saved receipt data"
+                        >
+                            <History className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                'h-8 w-8 text-blue-100 hover:text-white hover:bg-white/20',
+                                isInsightsPanelOpen && 'bg-white/20 text-white'
+                            )}
+                            onClick={() => setIsInsightsPanelOpen(prev => !prev)}
+                            title="Show community concerns"
+                        >
+                            <Info className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                'h-8 w-8 text-blue-100 hover:text-white hover:bg-white/20',
+                                isHandoffOpen && 'bg-white/20 text-white'
+                            )}
+                            onClick={() => setIsHandoffOpen(prev => !prev)}
+                            title="Need OSCA/PDAO or 8888 help?"
+                        >
+                            <PhoneForwarded className="h-4 w-4" />
+                        </Button>
                         <Button
                             variant="ghost"
                             size="icon"
@@ -636,6 +680,149 @@ ${activeMode.promptAddendum}
                     </div>
                 </CardHeader>
 
+                {isHistoryOpen && (
+                    <div className="bg-white border-b border-blue-100 max-h-44 overflow-y-auto px-4 py-3 text-xs space-y-2">
+                        {receiptHistory.length === 0 ? (
+                            <p className="text-slate-500">No saved receipt data yet. Upload a receipt to build history.</p>
+                        ) : (
+                            receiptHistory.map(entry => (
+                                <div
+                                    key={entry.id}
+                                    className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-2"
+                                >
+                                    <div>
+                                        <p className="font-semibold text-slate-700">{entry.data.establishmentName || 'Unnamed receipt'}</p>
+                                        <p className="text-[11px] text-slate-500">
+                                            Saved {new Date(entry.savedAt).toLocaleString()} • ₱{entry.data.totalAmount.toFixed(2)}
+                                        </p>
+                                        {entry.note && <p className="text-[11px] text-slate-500 line-clamp-1">Note: {entry.note}</p>}
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            className="text-xs"
+                                            onClick={() => handleRestoreReceiptFromHistory(entry)}
+                                        >
+                                            Reuse
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                        {receiptHistory.length > 0 && (
+                            <div className="text-right">
+                                <Button variant="ghost" size="sm" className="text-xs text-slate-500" onClick={handleClearHistory}>
+                                    Clear history
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {isInsightsPanelOpen && (
+                    <div className="bg-indigo-50 border-b border-indigo-100 px-4 py-3 text-xs space-y-2">
+                        {insightHighlights.map(insight => (
+                            <div key={insight.id} className="rounded-lg border border-indigo-100 bg-white/70 p-2">
+                                <p className="font-semibold text-indigo-700">{insight.title}</p>
+                                <p className="text-slate-600">{insight.summary}</p>
+                                <div className="mt-1 flex flex-wrap gap-2 text-[10px] text-indigo-600">
+                                    {insight.tags.map(tag => (
+                                        <span key={tag} className="rounded-full bg-indigo-100 px-2 py-0.5">
+                                            #{tag}
+                                        </span>
+                                    ))}
+                                    <a
+                                        href={insight.sourceUrl}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-indigo-700 underline decoration-dotted"
+                                    >
+                                        Source
+                                    </a>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                <div className="border-b border-blue-100 bg-blue-50 px-4 py-3 text-xs">
+                    <button
+                        className="flex w-full items-center justify-between text-left text-blue-900"
+                        onClick={() => setIsResponseModeOpen(prev => !prev)}
+                    >
+                        <div className="flex items-center gap-2">
+                            <ListChecks className="h-4 w-4" />
+                            <span className="font-semibold">Response mode</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-[11px]">
+                            <span className="hidden md:inline">{isResponseModeOpen ? 'Hide' : 'Show'}</span>
+                            {isResponseModeOpen ? (
+                                <ChevronUp className="h-4 w-4" />
+                            ) : (
+                                <ChevronDown className="h-4 w-4" />
+                            )}
+                        </div>
+                    </button>
+                    {isResponseModeOpen && (
+                        <div className="mt-3 space-y-2">
+                            <div className="flex flex-wrap gap-2">
+                                {LAW_RESPONSE_MODES.map(mode => (
+                                    <button
+                                        key={mode.id}
+                                        className={cn(
+                                            'rounded-full border px-3 py-1 text-[11px] transition',
+                                            mode.id === responseModeId
+                                                ? 'border-blue-600 bg-white text-blue-700 shadow-sm'
+                                                : 'border-blue-200 text-blue-600 hover:border-blue-400 hover:bg-white'
+                                        )}
+                                        onClick={() => setResponseModeId(mode.id)}
+                                    >
+                                        {mode.label}
+                                    </button>
+                                ))}
+                            </div>
+                            <p className="text-[11px] text-blue-800">{activeMode.description}</p>
+                            <p className="text-[10px] text-blue-700">
+                                Cite: {activeMode.laws.join(', ')} • Rules: {activeMode.rules.join('; ')}
+                            </p>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-[11px] text-blue-700"
+                                onClick={() => setIsResponseModeOpen(false)}
+                            >
+                                Exit response mode
+                            </Button>
+                        </div>
+                    )}
+                </div>
+
+                {isHandoffOpen && (
+                    <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-xs space-y-2">
+                        <p className="font-semibold text-amber-900">Need human escalation?</p>
+                        <p className="text-amber-900">
+                            Contact your OSCA/PDAO or dial <span className="font-semibold">8888</span>. Attach a clear receipt photo, your ID, and a short summary.
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                            <a
+                                href={`mailto:osca@pdao.gov.ph?subject=Discount Concern&body=${transcriptForEmail}`}
+                                className="rounded-full bg-amber-600 px-3 py-1 text-white hover:bg-amber-700"
+                            >
+                                Draft email with transcript
+                            </a>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-xs text-amber-900"
+                                onClick={() => setIsHandoffOpen(false)}
+                            >
+                                Hide panel
+                            </Button>
+                        </div>
+                    </div>
+                )}
+
                 {!isMinimized && (
                     <>
                         <CardContent className="flex-1 p-0 overflow-hidden bg-slate-50 relative">
@@ -643,6 +830,94 @@ ${activeMode.promptAddendum}
                                 ref={scrollRef}
                                 className="h-full overflow-y-auto p-4 space-y-4 scroll-smooth"
                             >
+                                {shouldShowQuickActions && (
+                                    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-3 text-xs shadow-sm">
+                                        <div className="flex items-center gap-2">
+                                            <Sparkles className="h-4 w-4 text-indigo-600" />
+                                            <p className="font-semibold text-slate-700">Quick start</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2">
+                                            {QUICK_ACTIONS.map(action => (
+                                                <Button
+                                                    key={action.id}
+                                                    type="button"
+                                                    variant="secondary"
+                                                    size="sm"
+                                                    className="text-xs"
+                                                    onClick={() => handleQuickActionSelect(action)}
+                                                >
+                                                    {action.label}
+                                                </Button>
+                                            ))}
+                                        </div>
+                                        <p className="text-[11px] text-slate-500">
+                                            These prompts reflect recent community pain points like under-applied discounts and missing receipts.
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className="rounded-2xl border border-dashed border-slate-300 bg-white/70 p-3 text-xs shadow-sm">
+                                    <button
+                                        onClick={() => setIsTemplatePanelOpen(prev => !prev)}
+                                        className="flex w-full items-center justify-between text-slate-700"
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <ClipboardList className="h-4 w-4 text-indigo-600" />
+                                            <span className="font-semibold">Scenario templates</span>
+                                        </div>
+                                        {isTemplatePanelOpen ? (
+                                            <ChevronUp className="h-4 w-4 text-slate-500" />
+                                        ) : (
+                                            <ChevronDown className="h-4 w-4 text-slate-500" />
+                                        )}
+                                    </button>
+                                    {isTemplatePanelOpen && (
+                                        <div className="mt-3 space-y-2">
+                                            {SCENARIO_TEMPLATES.map(template => {
+                                                const insight = template.insightId ? COMMUNITY_INSIGHT_MAP[template.insightId] : undefined
+                                                return (
+                                                    <div
+                                                        key={template.id}
+                                                        className={cn(
+                                                            'rounded-xl border p-3 transition',
+                                                            selectedTemplateId === template.id ? 'border-indigo-400 bg-indigo-50' : 'border-slate-200 bg-white'
+                                                        )}
+                                                    >
+                                                        <div className="flex items-center justify-between gap-2">
+                                                            <div>
+                                                                <p className="font-semibold text-slate-800">{template.title}</p>
+                                                                <p className="text-[11px] text-slate-500">{template.summary}</p>
+                                                            </div>
+                                                            <Button
+                                                                type="button"
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-xs text-indigo-700"
+                                                                onClick={() => handleTemplateUse(template)}
+                                                            >
+                                                                Use
+                                                            </Button>
+                                                        </div>
+                                                        <p className="mt-2 text-[11px] text-slate-600">
+                                                            Mode: {LAW_RESPONSE_MODES.find(mode => mode.id === template.recommendedMode)?.label}
+                                                        </p>
+                                                        {insight && (
+                                                            <a
+                                                                href={insight.sourceUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="text-[11px] text-indigo-600 underline decoration-dotted"
+                                                            >
+                                                                Based on: {insight.title}
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+
                                 {messages.map((msg, idx) => (
                                     <div
                                         key={idx}
@@ -706,22 +981,28 @@ ${activeMode.promptAddendum}
                             </div>
                         </CardContent>
 
-                        <CardFooter className="p-3 bg-white border-t">
+                        <CardFooter className="p-3 bg-white border-t" style={footerPaddingStyle}>
                             <div className="flex w-full flex-col gap-2">
                                 {/* Image Preview */}
                                 {imagePreview && (
-                                    <div className="relative inline-block">
-                                        <img
-                                            src={imagePreview}
-                                            alt="Receipt preview"
-                                            className="w-20 h-20 object-cover rounded-lg border-2 border-blue-200"
-                                        />
-                                        <button
-                                            onClick={handleRemoveImage}
-                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                                        >
-                                            <X className="h-3 w-3" />
-                                        </button>
+                                    <div className="space-y-2">
+                                        <div className="relative inline-block">
+                                            <img
+                                                src={imagePreview}
+                                                alt="Receipt preview"
+                                                className="w-20 h-20 object-cover rounded-lg border-2 border-blue-200"
+                                            />
+                                            <button
+                                                onClick={handleRemoveImage}
+                                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </div>
+                                        <div className="rounded-lg border border-blue-100 bg-blue-50 p-2 text-[11px] text-blue-800">
+                                            <p className="font-semibold">Receipt tip</p>
+                                            <p>Snap the totals, VAT, and service charge lines clearly. Mention how many diners shared the bill.</p>
+                                        </div>
                                     </div>
                                 )}
 
@@ -735,6 +1016,13 @@ ${activeMode.promptAddendum}
                                         <ImageIcon className="h-4 w-4 mr-2" />
                                         Use This Receipt Data
                                     </Button>
+                                )}
+
+                                {isAnalyzingReceipt && (
+                                    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-100 p-2 text-xs text-slate-600">
+                                        <Loader2 className="h-4 w-4 animate-spin text-indigo-600" />
+                                        <span>Analyzing receipt with Gemini, hang tight…</span>
+                                    </div>
                                 )}
 
                                 {/* Input Row */}

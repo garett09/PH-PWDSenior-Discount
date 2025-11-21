@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import {
     MessageCircle,
@@ -309,7 +309,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
         return encodeURIComponent(recent)
     }, [messages])
     const scrollRef = useRef<HTMLDivElement>(null)
-    const inputRef = useRef<HTMLInputElement>(null)
+    const inputRef = useRef<HTMLTextAreaElement>(null)
 
     // Auto-scroll to bottom
     useEffect(() => {
@@ -324,6 +324,14 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
             setTimeout(() => inputRef.current?.focus(), 100)
         }
     }, [isOpen, isMinimized])
+
+    useEffect(() => {
+        if (!inputRef.current) return
+        const textarea = inputRef.current
+        const maxHeight = isMobileViewport ? 200 : 240
+        textarea.style.height = 'auto'
+        textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`
+    }, [input, isMobileViewport])
 
     // Track viewport height to offset keyboard overlap on mobile
     useEffect(() => {
@@ -1050,14 +1058,15 @@ ${activeMode.promptAddendum}
                                         <Paperclip className="h-5 w-5" />
                                     </Button>
 
-                                    <Input
+                                    <Textarea
                                         ref={inputRef}
                                         placeholder="Ask about discounts or upload receipt..."
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         onKeyDown={handleKeyDown}
                                         disabled={isLoading}
-                                        className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500"
+                                        rows={1}
+                                        className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 resize-none overflow-y-auto text-sm"
                                     />
                                     <Button
                                         onClick={handleSend}

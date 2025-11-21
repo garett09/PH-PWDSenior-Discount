@@ -79,64 +79,91 @@ const SERVICE_CHARGE_BASE_OPTIONS = [
   }
 ] as const
 
-type IssuePreset = {
-  id: string
-  title: string
-  summary: string
-  amount: string
-  serviceCharge?: {
-    enabled: boolean
-    manualAmount?: string
-  }
-  diners: {
-    pwd: string
-    regular: string
-  }
-  advancedMode?: boolean
-  calculationMethod?: 'prorated' | 'exclusive'
-  note: string
-  laws: string
+const CoverageLegalContent = () => (
+  <div className="space-y-6">
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Badge className="bg-blue-100 text-blue-700 font-semibold">20% + VAT</Badge>
+        <h4 className="font-bold text-slate-900 text-base">Restaurant & Services</h4>
+      </div>
+      <ul className="space-y-1.5 text-sm text-slate-700 list-disc pl-5">
+        <li>Hotels, restaurants, and recreation centers</li>
+        <li>Theaters, cinema houses, concert halls</li>
+        <li>Medicines and drugstores</li>
+        <li>Medical and dental services (diagnostic, lab fees, professional fees)</li>
+        <li>Domestic air and sea travel</li>
+        <li>Land transportation (Jeepneys, Buses, Taxis, Trains)</li>
+        <li>Funeral and burial services</li>
+      </ul>
+    </div>
+
+    <Separator />
+
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        <Badge className="bg-green-100 text-green-700 font-semibold">5%</Badge>
+        <h4 className="font-bold text-slate-900 text-base">Groceries (Capped at ₱2,500/week)</h4>
+      </div>
+      <ul className="space-y-1.5 text-sm text-slate-700 list-disc pl-5">
+        <li>Basic necessities (rice, bread, milk, coffee, laundry soap, etc.)</li>
+        <li>Prime commodities (fresh fruits, flour, canned goods, etc.)</li>
+      </ul>
+      <div className="rounded-lg bg-red-50 border-l-4 border-red-500 px-3 py-2">
+        <p className="text-sm text-red-800 font-semibold">
+          No VAT discount except for agricultural/marine products in original state
+        </p>
+      </div>
+    </div>
+
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-slate-200 pt-4 text-xs sm:text-sm text-slate-600">
+      <p className="font-medium text-blue-600">Sources: RA 10754, RA 9994, RA 7581</p>
+      <a
+        href="https://www.officialgazette.gov.ph/2016/03/23/republic-act-no-10754/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 font-semibold group"
+      >
+        <span>View Official Law</span>
+        <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+      </a>
+    </div>
+  </div>
+)
+
+type CoverageCardProps = {
+  isExpanded: boolean
+  onToggle: () => void
+  className?: string
 }
 
-const ISSUE_PRESETS: IssuePreset[] = [
-  {
-    id: 'flat-50',
-    title: 'Flat ₱50 only',
-    summary: 'Cafe removed just ₱50 on a ₱430 solo order',
-    amount: '430',
-    diners: { pwd: '1', regular: '0' },
-    advancedMode: false,
-    calculationMethod: 'prorated',
-    note: 'We’ll show the VAT-first then 20% math so you can compare it to the receipt and insist on the proper ₱122.86 total discount.',
-    laws: 'Cite RA 10754 + RA 9994 + RA 10909 (Exact Change Law)'
-  },
-  {
-    id: 'burger-25',
-    title: '₱25 burger discount',
-    summary: '₱25 off on a ₱397 burger/milkshake meal',
-    amount: '397',
-    diners: { pwd: '1', regular: '0' },
-    advancedMode: true,
-    calculationMethod: 'prorated',
-    note: 'Use this to compute the ₱70.89 VAT + ₱70.89 20% deductions before you escalate to DTI/8888 if the shop refuses.',
-    laws: 'Cite RA 10754 + DOJ Opinion No. 45 (verification cannot delay discounts)'
-  },
-  {
-    id: 'service-charge-audit',
-    title: 'Service charge audit',
-    summary: 'Need to check if SC is really 10%',
-    amount: '',
-    serviceCharge: {
-      enabled: true,
-      manualAmount: ''
-    },
-    diners: { pwd: '1', regular: '3' },
-    advancedMode: true,
-    calculationMethod: 'prorated',
-    note: 'Toggle manual service-charge audit, enter the receipt’s SC line, and we’ll show the % on subtotal vs base to prove if it’s 10%.',
-    laws: 'Reference DOJ Opinion No. 45 + DTI-DOLE Service Charge IRR (Feb 2024)'
-  }
-]
+function CoverageCard({ isExpanded, onToggle, className }: CoverageCardProps) {
+  return (
+    <div className={cn('w-full bg-white rounded-xl border-2 border-slate-200 shadow-lg overflow-hidden', className)}>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="flex w-full items-center justify-between px-4 sm:px-6 py-4 sm:py-5 text-slate-700 hover:text-blue-600 font-semibold text-sm sm:text-base"
+      >
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-blue-100">
+            <Info className="w-4 h-4 text-blue-600" />
+          </div>
+          <span>Coverage & Legal Information</span>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="w-4 h-4 text-slate-500" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-slate-500" />
+        )}
+      </button>
+      {isExpanded && (
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
+          <CoverageLegalContent />
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function DiscountCalculator() {
   // Restaurant/Medicine State
@@ -233,8 +260,7 @@ export function DiscountCalculator() {
 
   // Receipt Scanner Data from Chatbot
   const [chatbotReceiptData, setChatbotReceiptData] = useState<any>(null)
-  const [activeIssuePreset, setActiveIssuePreset] = useState<IssuePreset | null>(null)
-
+  const [isCoverageExpanded, setIsCoverageExpanded] = useState(true)
   // Handle receipt data from chatbot
   useEffect(() => {
     if (!chatbotReceiptData) return

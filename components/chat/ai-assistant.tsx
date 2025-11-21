@@ -111,9 +111,37 @@ interface AiAssistantProps {
 export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
     const [isOpen, setIsOpen] = useState(false)
     const [isMinimized, setIsMinimized] = useState(false)
-    const [messages, setMessages] = useState<Message[]>([
-        { role: 'model', text: 'Hello! I\'m your DiscountPH assistant. Ask me anything about PWD or Senior Citizen discounts, or upload a receipt for analysis!' }
-    ])
+    const [messages, setMessages] = useState<Message[]>([])
+    const [isLoaded, setIsLoaded] = useState(false)
+
+    // Load chat history on mount
+    useEffect(() => {
+        const saved = localStorage.getItem('chat_messages')
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved)
+                if (parsed.length > 0) {
+                    setMessages(parsed)
+                    setIsLoaded(true)
+                    return
+                }
+            } catch (e) {
+                console.error('Failed to parse chat history', e)
+            }
+        }
+        // Default greeting if no history
+        setMessages([
+            { role: 'model', text: 'Hello! I\'m your DiscountPH assistant. Ask me anything about PWD or Senior Citizen discounts, or upload a receipt for analysis!' }
+        ])
+        setIsLoaded(true)
+    }, [])
+
+    // Save chat history on change
+    useEffect(() => {
+        if (isLoaded) {
+            localStorage.setItem('chat_messages', JSON.stringify(messages))
+        }
+    }, [messages, isLoaded])
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [attachedImage, setAttachedImage] = useState<string | null>(null) // base64

@@ -461,6 +461,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
             image: imageToSend || undefined
         }])
         setIsLoading(true)
+        setIsAnalyzingReceipt(Boolean(imageToSend))
 
         try {
             const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY || ''
@@ -472,13 +473,29 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
                 return
             }
 
+            const modeInstruction = `
+### RESPONSE MODE: ${activeMode.label}
+${activeMode.description}
+Laws to cite: ${activeMode.laws.join(', ')}
+Rules to emphasize:
+${activeMode.rules.map(rule => `- ${rule}`).join('\n')}
+
+${activeMode.promptAddendum}
+`
+
+            const recentConcernsSection = communityPromptSnippet
+                ? `\n### Recent Community Concerns\n${communityPromptSnippet}\n`
+                : ''
+
             // Build parts array
             const parts: any[] = []
 
             // Add receipt analysis prompt if image is attached
             if (imageToSend) {
                 parts.push({
-                    text: SYSTEM_PROMPT + `\n\n**IMPORTANT: The user has uploaded a receipt image.**\n\nAnalyze the receipt and extract:\n1. Receipt type (restaurant, grocery, medicine, utility, transport)\n2. Total bill amount (subtotal)\n3. Service charge (if present) - IMPORTANT: Note the exact amount shown\n4. VAT amount (if shown)\n5. Individual items (if visible)\n6. Establishment name\n7. Number of diners (if mentioned, e.g., "2 guests, 1 PWD")\n\n**SERVICE CHARGE PERCENTAGE ANALYSIS:**\n- If service charge is present, calculate what percentage it represents:\n  * On Subtotal (with VAT): (Service Charge / Subtotal) × 100\n  * On Base (without VAT): (Service Charge / (Subtotal / 1.12)) × 100\n- Most restaurants calculate at 10% on base amount (without VAT)\n- If percentage is much lower (4-5%), it may indicate group dining where only regular diners paid their share\n- Explain which calculation method is most likely based on the percentages\n\n**ADVANCED ANALYSIS:**\n- Look for specific meals that might be for the PWD/Senior (e.g., a single meal set vs shared platters).\n- If you see distinct individual meals, suggest 'exclusive' calculation method and estimate the PWD's exclusive amount.\n- If items look shared (platters, pizza, bulk), suggest 'prorated'.\n\nProvide a friendly summary including the service charge percentage analysis, then output the extracted data in this JSON format:\n\`\`\`json\n{\n  "type": "restaurant" | "grocery" | "medicine" | "utility" | "transport",\n  "totalAmount": number,\n  "serviceCharge": number | null,\n  "items": [{ "name": string, "price": number }],\n  "establishmentName": string,\n  "calculationMethod": "prorated" | "exclusive",\n  "exclusiveAmount": number (optional, if method is exclusive)\n}\n\`\`\`\n\nUser Question: ` + userMessage
+                    text:
+                        SYSTEM_PROMPT +
+                        `\n\n**IMPORTANT: The user has uploaded a receipt image.**\n\nAnalyze the receipt and extract:\n1. Receipt type (restaurant, grocery, medicine, utility, transport)\n2. Total bill amount (subtotal)\n3. Service charge (if present) - IMPORTANT: Note the exact amount shown\n4. VAT amount (if shown)\n5. Individual items (if visible)\n6. Establishment name\n7. Number of diners (if mentioned, e.g., "2 guests, 1 PWD")\n\n**SERVICE CHARGE PERCENTAGE ANALYSIS:**\n- If service charge is present, calculate what percentage it represents:\n  * On Subtotal (with VAT): (Service Charge / Subtotal) × 100\n  * On Base (without VAT): (Service Charge / (Subtotal / 1.12)) × 100\n- Most restaurants calculate at 10% on base amount (without VAT)\n- If percentage is much lower (4-5%), it may indicate group dining where only regular diners paid their share\n- Explain which calculation method is most likely based on the percentages\n\n**ADVANCED ANALYSIS:**\n- Look for specific meals that might be for the PWD/Senior (e.g., a single meal set vs shared platters).\n- If you see distinct individual meals, suggest 'exclusive' calculation method and estimate the PWD's exclusive amount.\n- If items look shared (platters, pizza, bulk), suggest 'prorated'.\n\n${modeInstruction}\n${recentConcernsSection}\nProvide a friendly summary including the service charge percentage analysis, then output the extracted data in this JSON format:\n\`\`\`json\n{\n  "type": "restaurant" | "grocery" | "medicine" | "utility" | "transport",\n  "totalAmount": number,\n  "serviceCharge": number | null,\n  "items": [{ "name": string, "price": number }],\n  "establishmentName": string,\n  "calculationMethod": "prorated" | "exclusive",\n  "exclusiveAmount": number (optional, if method is exclusive)\n}\n\`\`\`\n\nUser Question: ` + userMessage
                 })
                 parts.push({
                     inline_data: {
@@ -487,7 +504,16 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
                     }
                 })
             } else {
-                parts.push({ text: SYSTEM_PROMPT + "\n\nUser Question: " + userMessage })
+                parts.push({
+                    text:
+                        SYSTEM_PROMPT +
+                        '\n' +
+                        modeInstruction +
+                        '\n' +
+                        recentConcernsSection +
+                        '\nUser Question: ' +
+                        userMessage
+                })
             }
 
             const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-pro-preview:generateContent?key=${API_KEY}`, {
@@ -525,6 +551,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
                     if (jsonMatch) {
                         const extractedData = JSON.parse(jsonMatch[1])
                         setExtractedReceiptData(extractedData)
+                        saveReceiptToHistory(extractedData, userMessage)
                     }
                 } catch (e) {
                     console.error('Failed to parse receipt data:', e)
@@ -537,6 +564,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
             setMessages(prev => [...prev, { role: 'model', text: 'Sorry, I encountered an error connecting to the server. Please try again later.' }])
         } finally {
             setIsLoading(false)
+            setIsAnalyzingReceipt(false)
         }
     }
 

@@ -6,6 +6,8 @@ import { saveCalculation, getSavedCalculations, deleteCalculation, formatCalcula
 import { MedicineCalculator } from '@/components/calculators/medicine-calculator'
 import { UtilitiesCalculator } from '@/components/calculators/utilities-calculator'
 import { TransportCalculator } from '@/components/calculators/transport-calculator'
+import { TakeoutCalculator } from '@/components/calculators/takeout-calculator'
+import { DiscountAuditor } from '@/components/calculators/discount-auditor'
 import { RightsFlashcards } from '@/components/legal/rights-flashcards'
 import { ComplaintGenerator } from '@/components/legal/complaint-generator'
 import { CityOrdinanceChecker } from '@/components/city/city-ordinance-checker'
@@ -89,6 +91,7 @@ export function DiscountCalculator() {
   const [manualScAmount, setManualScAmount] = useState<string>('')
   const [numPwdSenior, setNumPwdSenior] = useState<string>('1')
   const [numRegular, setNumRegular] = useState<string>('0')
+  const [diningMode, setDiningMode] = useState<'dine-in' | 'takeout'>('dine-in')
 
   // Groceries State
   const [gAmount, setGAmount] = useState<string>('')
@@ -657,7 +660,35 @@ export function DiscountCalculator() {
                   </TabsList>
 
                   <TabsContent value="restaurant" className="space-y-4 md:space-y-6 mt-0">
-                    <div className="space-y-4 md:space-y-5">
+                    {/* Dining Mode Toggle */}
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-xl mb-4">
+                      <button
+                        type="button"
+                        onClick={() => setDiningMode('dine-in')}
+                        className={cn(
+                          'py-2.5 text-sm font-bold rounded-lg transition-all',
+                          diningMode === 'dine-in'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        )}
+                      >
+                        Dine-in (Standard)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setDiningMode('takeout')}
+                        className={cn(
+                          'py-2.5 text-sm font-bold rounded-lg transition-all',
+                          diningMode === 'takeout'
+                            ? 'bg-white text-blue-600 shadow-sm'
+                            : 'text-slate-500 hover:text-slate-700'
+                        )}
+                      >
+                        Takeout (MEMC)
+                      </button>
+                    </div>
+
+                    <div className={cn("space-y-4 md:space-y-5", diningMode !== 'dine-in' && "hidden")}>
                       {/* Simple/Advanced Mode Toggle */}
                       <div className="flex items-center justify-between p-3 md:p-4 rounded-xl bg-gradient-to-r from-slate-50 to-blue-50 border-2 border-slate-200">
                         <div className="flex-1">
@@ -1039,6 +1070,12 @@ export function DiscountCalculator() {
                         Calculate Discount
                       </Button>
                     </div>
+
+                    {diningMode === 'takeout' && (
+                      <div className="animate-in fade-in slide-in-from-top-4 duration-300">
+                        <TakeoutCalculator />
+                      </div>
+                    )}
                   </TabsContent>
 
                   <TabsContent value="groceries" className="space-y-4 md:space-y-6 mt-0">

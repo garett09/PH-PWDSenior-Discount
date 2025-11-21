@@ -1144,9 +1144,10 @@ export function DiscountCalculator() {
 
                   <TabsContent value="more" className="mt-0 space-y-6">
                     <Tabs defaultValue="legal" className="w-full">
-                      <TabsList className="w-full grid grid-cols-3 bg-slate-100 p-1 rounded-lg mb-4">
+                      <TabsList className="w-full grid grid-cols-4 bg-slate-100 p-1 rounded-lg mb-4">
                         <TabsTrigger value="legal" className="text-xs sm:text-sm">Rights</TabsTrigger>
                         <TabsTrigger value="complaint" className="text-xs sm:text-sm">Complaint</TabsTrigger>
+                        <TabsTrigger value="audit" className="text-xs sm:text-sm">Audit</TabsTrigger>
                         <TabsTrigger value="city" className="text-xs sm:text-sm">City Perks</TabsTrigger>
                       </TabsList>
 
@@ -1156,6 +1157,10 @@ export function DiscountCalculator() {
 
                       <TabsContent value="complaint" className="mt-0">
                         <ComplaintGenerator />
+                      </TabsContent>
+
+                      <TabsContent value="audit" className="mt-0">
+                        <DiscountAuditor />
                       </TabsContent>
 
                       <TabsContent value="city" className="mt-0">

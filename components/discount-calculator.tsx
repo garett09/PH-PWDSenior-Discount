@@ -79,6 +79,65 @@ const SERVICE_CHARGE_BASE_OPTIONS = [
   }
 ] as const
 
+type IssuePreset = {
+  id: string
+  title: string
+  summary: string
+  amount: string
+  serviceCharge?: {
+    enabled: boolean
+    manualAmount?: string
+  }
+  diners: {
+    pwd: string
+    regular: string
+  }
+  advancedMode?: boolean
+  calculationMethod?: 'prorated' | 'exclusive'
+  note: string
+  laws: string
+}
+
+const ISSUE_PRESETS: IssuePreset[] = [
+  {
+    id: 'flat-50',
+    title: 'Flat ₱50 only',
+    summary: 'Cafe removed just ₱50 on a ₱430 solo order',
+    amount: '430',
+    diners: { pwd: '1', regular: '0' },
+    advancedMode: false,
+    calculationMethod: 'prorated',
+    note: 'We’ll show the VAT-first then 20% math so you can compare it to the receipt and insist on the proper ₱122.86 total discount.',
+    laws: 'Cite RA 10754 + RA 9994 + RA 10909 (Exact Change Law)'
+  },
+  {
+    id: 'burger-25',
+    title: '₱25 burger discount',
+    summary: '₱25 off on a ₱397 burger/milkshake meal',
+    amount: '397',
+    diners: { pwd: '1', regular: '0' },
+    advancedMode: true,
+    calculationMethod: 'prorated',
+    note: 'Use this to compute the ₱70.89 VAT + ₱70.89 20% deductions before you escalate to DTI/8888 if the shop refuses.',
+    laws: 'Cite RA 10754 + DOJ Opinion No. 45 (verification cannot delay discounts)'
+  },
+  {
+    id: 'service-charge-audit',
+    title: 'Service charge audit',
+    summary: 'Need to check if SC is really 10%',
+    amount: '',
+    serviceCharge: {
+      enabled: true,
+      manualAmount: ''
+    },
+    diners: { pwd: '1', regular: '3' },
+    advancedMode: true,
+    calculationMethod: 'prorated',
+    note: 'Toggle manual service-charge audit, enter the receipt’s SC line, and we’ll show the % on subtotal vs base to prove if it’s 10%.',
+    laws: 'Reference DOJ Opinion No. 45 + DTI-DOLE Service Charge IRR (Feb 2024)'
+  }
+]
+
 export function DiscountCalculator() {
   // Restaurant/Medicine State
   const [rmAmount, setRmAmount] = useState<string>('')
@@ -174,6 +233,7 @@ export function DiscountCalculator() {
 
   // Receipt Scanner Data from Chatbot
   const [chatbotReceiptData, setChatbotReceiptData] = useState<any>(null)
+  const [activeIssuePreset, setActiveIssuePreset] = useState<IssuePreset | null>(null)
 
   // Handle receipt data from chatbot
   useEffect(() => {
@@ -218,6 +278,29 @@ export function DiscountCalculator() {
     // Clear the data after processing
     setChatbotReceiptData(null)
   }, [chatbotReceiptData])
+
+  const applyIssuePreset = (preset: IssuePreset) => {
+    setActiveTab('restaurant')
+    setIsRestaurant(parseInt(preset.diners.regular) > 0)
+    setRmAmount(preset.amount)
+    setNumPwdSenior(preset.diners.pwd)
+    setNumRegular(preset.diners.regular)
+    setIsAdvancedMode(Boolean(preset.advancedMode))
+    setCalculationMethod(preset.calculationMethod ?? 'prorated')
+    setHasServiceCharge(Boolean(preset.serviceCharge?.enabled))
+    if (preset.serviceCharge?.enabled && preset.serviceCharge.manualAmount !== undefined) {
+      setManualScMode(true)
+      setManualScAmount(preset.serviceCharge.manualAmount)
+    } else {
+      setManualScMode(false)
+      setManualScAmount('')
+    }
+    setActiveIssuePreset(preset)
+  }
+
+  const clearIssuePreset = () => {
+    setActiveIssuePreset(null)
+  }
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })
@@ -303,7 +386,7 @@ export function DiscountCalculator() {
   const shareBreakdown = async () => {
     if (!rmResult) return
 
-    let text = `DiscountPH - Bill Summary\n`
+    let text = `Karapat Discount - Bill Summary\n`
     text += `━━━━━━━━━━━━━━━━━━━━━━\n`
     text += `Base Amount: ${formatCurrency(rmResult.baseAmount)}\n`
     text += `VAT (12%): +${formatCurrency(rmResult.vatAmount)}\n`
@@ -351,7 +434,7 @@ export function DiscountCalculator() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'DiscountPH - Bill Summary',
+          title: 'Karapat Discount - Bill Summary',
           text: text
         })
         return
@@ -547,7 +630,7 @@ export function DiscountCalculator() {
         <div className="text-center space-y-3 py-4 md:py-6">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-2">
             <Sparkles className="w-4 h-4" />
-            <span>DiscountPH</span>
+            <span>Karapat Discount</span>
           </div>
           <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-900 tracking-tight px-4">
             Senior Citizen & PWD
@@ -725,6 +808,52 @@ export function DiscountCalculator() {
                         </div>
                       </div>
 
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-slate-500 tracking-wide uppercase">Reddit-tested presets</p>
+                          {activeIssuePreset && (
+                            <button
+                              type="button"
+                              onClick={clearIssuePreset}
+                              className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              Reset
+                            </button>
+                          )}
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-3">
+                          {ISSUE_PRESETS.map((preset) => (
+                            <button
+                              key={preset.id}
+                              type="button"
+                              onClick={() => applyIssuePreset(preset)}
+                              className={cn(
+                                'rounded-xl border-2 px-3 py-3 text-left transition-all touch-manipulation min-h-[90px]',
+                                activeIssuePreset?.id === preset.id
+                                  ? 'border-blue-600 bg-blue-50 shadow-sm'
+                                  : 'border-slate-200 bg-white hover:border-blue-300'
+                              )}
+                            >
+                              <p className="text-sm font-semibold text-slate-800">{preset.title}</p>
+                              <p className="text-[11px] text-slate-500 leading-snug mt-1">{preset.summary}</p>
+                            </button>
+                          ))}
+                        </div>
+                        {activeIssuePreset && (
+                          <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900 space-y-1 animate-in fade-in">
+                            <div className="flex items-center justify-between">
+                              <p className="font-semibold">Loaded: {activeIssuePreset.title}</p>
+                              <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-700" onClick={clearIssuePreset}>
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <p>{activeIssuePreset.note}</p>
+                            <p className="text-[10px] uppercase tracking-wide font-semibold">{activeIssuePreset.laws}</p>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Amount Input */}
                       <div className="space-y-2.5">
                         <Label htmlFor="rm-amount" className="text-base font-semibold text-slate-700">Bill Amount</Label>
@@ -742,6 +871,15 @@ export function DiscountCalculator() {
                         </div>
                       </div>
 
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-3 text-[11px] text-slate-600 leading-relaxed">
+                        <p className="font-semibold text-slate-800 mb-1">Receipt capture checklist</p>
+                        <ul className="space-y-1">
+                          <li>• Snap the subtotal, VAT, service charge, and total lines clearly.</li>
+                          <li>• Note the number of diners (e.g., “2 guests, 1 PWD”).</li>
+                          <li>• Copy the exact service-charge peso amount if you plan to audit it below.</li>
+                        </ul>
+                      </div>
+
                       {/* Toggle */}
                       <div className="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 hover:border-blue-300 transition-all min-h-[60px]">
                         <div className="space-y-0.5 flex-1">
@@ -755,6 +893,13 @@ export function DiscountCalculator() {
                             onCheckedChange={setIsRestaurant}
                           />
                         </div>
+                      </div>
+
+                      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-[11px] text-blue-800 leading-relaxed">
+                        <p className="font-semibold mb-1">Verification reminder</p>
+                        <p>
+                          If staff question your PWD/Senior ID, cite DOJ Opinion No. 45 (2024): verification cannot delay the discount. Offer to show your ID number or let them call OSCA/PDAO, but they must still compute the benefit right away.
+                        </p>
                       </div>
 
                       {/* Advanced Options for Mixed Transactions */}
@@ -1174,7 +1319,7 @@ export function DiscountCalculator() {
                     <div className="space-y-4 text-slate-600 pt-4">
                       <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
                         <Info className="w-5 h-5 text-blue-600" />
-                        About DiscountPH
+                        About Karapat Discount
                       </h3>
                       <p className="text-sm leading-relaxed">
                         This calculator helps Senior Citizens and Persons with Disability (PWD) in the Philippines compute their entitled discounts for medicines, restaurants, groceries, utilities, and travel.

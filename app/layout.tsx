@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'DiscountPH | PWD & Senior Citizen Discount Calculator',
+  title: 'Karapat Discount | PWD & Senior Citizen Discount Calculator',
   description: 'Calculate discounts for senior citizens and persons with disability (PWD) in the Philippines. Get instant 20% discount and VAT exemption calculations based on Republic Act No. 10754.',
   generator: 'v0.app',
   viewport: {

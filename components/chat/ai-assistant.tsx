@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
 import {
     MessageCircle,
@@ -35,7 +34,7 @@ import { APP_KNOWLEDGE } from '@/components/chat/app-knowledge'
 
 // System prompt containing all the knowledge base
 const SYSTEM_PROMPT = `
-You are the AI Assistant for "DiscountPH", an app that helps Senior Citizens and Persons with Disabilities (PWDs) in the Philippines calculate their discounts.
+You are the AI Assistant for "Karapat Discount", an app that helps Senior Citizens and Persons with Disabilities (PWDs) in the Philippines calculate their discounts.
 
 Your role is to answer questions about benefits, laws, and calculations based on the following official guidelines:
 
@@ -246,7 +245,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
         }
         // Default greeting if no history
         setMessages([
-            { role: 'model', text: 'Hello! I\'m your DiscountPH assistant. Ask me anything about PWD or Senior Citizen discounts, or upload a receipt for analysis!' }
+            { role: 'model', text: 'Hello! I\'m your Karapat Discount assistant. Ask me anything about PWD or Senior Citizen discounts, or upload a receipt for analysis!' }
         ])
         setIsLoaded(true)
     }, [])
@@ -600,10 +599,10 @@ ${activeMode.promptAddendum}
             <Button
                 onClick={() => setIsOpen(true)}
                 className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white z-50 transition-all hover:scale-105"
-                title="Scan receipts or ask DiscountPH AI about RA 10754/RA 9994"
+                title="Scan receipts or ask Karapat Discount AI about RA 10754/RA 9994"
             >
                 <MessageCircle className="h-7 w-7" />
-                <span className="sr-only">Open DiscountPH AI for receipt scans & legal help</span>
+                <span className="sr-only">Open Karapat Discount AI for receipt scans & legal help</span>
             </Button>
         )
     }
@@ -620,7 +619,7 @@ ${activeMode.promptAddendum}
                             <Sparkles className="w-4 h-4 text-yellow-300" />
                         </div>
                         <div>
-                            <CardTitle className="text-base font-bold">DiscountPH AI</CardTitle>
+                            <CardTitle className="text-base font-bold">Karapat Discount AI</CardTitle>
                             <CardDescription className="text-blue-100 text-xs">Upload receipts • Cite RA 10754 & RA 9994</CardDescription>
                         </div>
                     </div>

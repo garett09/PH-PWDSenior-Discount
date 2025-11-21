@@ -1,4 +1,4 @@
-# DiscountPH 🇵🇭
+# Karapat Discount 🇵🇭
 
 **The most accurate PWD and Senior Citizen discount calculator for the Philippines.**
 
@@ -109,7 +109,7 @@ When dining with regular paying customers:
 
 ## 🔒 Privacy
 
-DiscountPH does not collect, store, or transmit any personal information. All calculations are performed locally on your device. Saved calculations are stored in your browser's local storage only.
+Karapat Discount does not collect, store, or transmit any personal information. All calculations are performed locally on your device. Saved calculations are stored in your browser's local storage only.
 
 ## 📜 Legal References
 

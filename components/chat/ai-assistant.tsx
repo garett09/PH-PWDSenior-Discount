@@ -380,7 +380,14 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
                 ? 'inset-0 w-full h-full rounded-none'
                 : 'inset-0 md:inset-auto md:bottom-6 md:right-6 w-full h-full md:w-[400px] md:h-[600px] md:rounded-xl'
     )
-    const footerPaddingStyle = isMobileViewport ? { paddingBottom: 12 + keyboardOffset } : undefined
+    const containerStyle = !isMinimized
+        ? isMobileViewport || keyboardOffset > 0
+            ? { bottom: keyboardOffset }
+            : undefined
+        : undefined
+    const footerPaddingStyle = isMobileViewport
+        ? { paddingBottom: 'calc(12px + env(safe-area-inset-bottom))' }
+        : undefined
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]

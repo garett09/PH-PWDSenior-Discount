@@ -104,4 +104,23 @@ SECTION 4. PRIVILEGES FOR THE SENIOR CITIZENS
 
 7. Express Lanes:
    - Priority lanes in all commercial and government establishments.
+
+---
+GUIDELINES FOR GROUP MEALS AND TAKEOUT (BIR & DTI RULES)
+
+1. DINE-IN GROUP MEALS (Sharing):
+   - The 20% discount and VAT exemption apply ONLY to the share of the Senior Citizen/PWD.
+   - Formula: (Total Bill / Number of Diners) = Individual Share.
+   - The discount applies to the Individual Share of the SC/PWD.
+
+2. TAKEOUT / DELIVERY / DRIVE-THRU (The MEMC Rule):
+   - When individual consumption cannot be clearly determined (e.g., family meals, group platters), the "Most Expensive Meal Combination" (MEMC) rule applies.
+   - The 20% discount and VAT exemption apply to the amount corresponding to the MEMC.
+   - MEMC Definition: The most expensive and biggest single-serving meal with beverage served by the establishment.
+   - Example: If a group orders a family platter, the discount applies only to the price of the most expensive solo meal (e.g., 1 pc Chicken Meal with drink), not the entire platter.
+   - EXCEPTION: If the group consists ENTIRELY of Senior Citizens/PWDs, the discount applies to the total bill.
+
+3. "EXCLUSIVE USE" PRINCIPLE:
+   - The discount is for the exclusive use and enjoyment of the SC/PWD.
+   - For solo meals ordered by an SC/PWD (even for takeout), the full discount applies to that meal.
 `

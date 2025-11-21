@@ -114,6 +114,29 @@ const RIGHTS = [
       The total amount of purchase shall not exceed ₱1,300 per week. The maximum discount is ₱65 per week.
     `,
         sourceUrl: null
+    },
+    {
+        id: 'takeout-memc',
+        title: 'Takeout & Delivery',
+        icon: Receipt,
+        color: 'text-indigo-600',
+        bgColor: 'bg-indigo-100',
+        shortDesc: '20% off on Most Expensive Meal (MEMC).',
+        fullText: `
+      **BIR Revenue Regulations No. 7-2010 & RMC 71-2022:**
+      
+      For takeout, delivery, and drive-thru orders where the PWD/Senior is not present or individual consumption cannot be determined, the **Most Expensive Meal Combination (MEMC)** rule applies.
+      
+      **The Rule:**
+      The 20% discount and VAT exemption shall apply to the **Most Expensive Meal Combination (MEMC)** composed of a single serving of food with beverage.
+      
+      **Example:**
+      If you order a Family Bundle (₱1,500) and a separate Burger Meal (₱200), the discount applies to the Burger Meal (if it's the biggest single serving) or a prorated portion of the bundle equivalent to one person's meal.
+      
+      **Exclusive Use:**
+      The discount is for the exclusive use of the PWD/Senior Citizen. Group meals are not fully discounted, only the share of the PWD/Senior.
+    `,
+        sourceUrl: 'https://www.bir.gov.ph/images/bir_files/internal_communications_2/RMC%20No%2071-2022.pdf'
     }
 ]
 
@@ -160,10 +183,10 @@ export function RightsFlashcards() {
                         <div className="text-slate-700 text-sm leading-relaxed pr-6">
                             {selectedRight?.fullText.split('\n').map((line, lineIndex) => {
                                 const trimmedLine = line.trim()
-                                
+
                                 // Skip empty lines
                                 if (!trimmedLine) return <div key={lineIndex} className="h-2" />
-                                
+
                                 // Handle bold headings (lines starting with **)
                                 if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
                                     const heading = trimmedLine.replace(/\*\*/g, '')
@@ -173,7 +196,7 @@ export function RightsFlashcards() {
                                         </h4>
                                     )
                                 }
-                                
+
                                 // Handle bullet points
                                 if (trimmedLine.startsWith('•')) {
                                     const bulletContent = trimmedLine.substring(1).trim()
@@ -194,7 +217,7 @@ export function RightsFlashcards() {
                                         </div>
                                     )
                                 }
-                                
+
                                 // Regular paragraph text
                                 const parts = trimmedLine.split('**')
                                 return (

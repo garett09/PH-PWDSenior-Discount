@@ -1529,64 +1529,11 @@ export function DiscountCalculator() {
               </CardContent>
             </Card>
 
-            {/* Coverage Accordion */}
-            <Accordion type="single" collapsible className="w-full bg-white rounded-xl border-2 border-slate-200 shadow-lg overflow-hidden">
-              <AccordionItem value="coverage" className="border-0">
-                <AccordionTrigger className="text-slate-700 hover:text-blue-600 hover:no-underline px-4 sm:px-6 py-4 sm:py-5 font-semibold text-sm sm:text-base touch-manipulation min-h-[60px]">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-blue-100">
-                      <Info className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span>Coverage & Legal Information</span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4 sm:space-y-6">
-                  <div className="space-y-3">
-                    <h4 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                      <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">20% + VAT</Badge>
-                      Restaurant & Services
-                    </h4>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 leading-relaxed">
-                      <li>Hotels, restaurants, and recreation centers</li>
-                      <li>Theaters, cinema houses, concert halls</li>
-                      <li>Medicines and drugstores</li>
-                      <li>Medical and dental services (diagnostic, lab fees, professional fees)</li>
-                      <li>Domestic air and sea travel</li>
-                      <li>Land transportation (Jeepneys, Buses, Taxis, Trains)</li>
-                      <li>Funeral and burial services</li>
-                    </ul>
-                  </div>
-                  <Separator />
-                  <div className="space-y-3">
-                    <h4 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">5%</Badge>
-                      Groceries (Capped at ₱2,500/week)
-                    </h4>
-                    <ul className="list-disc pl-5 space-y-2 text-sm text-slate-600 leading-relaxed">
-                      <li>Basic necessities (Rice, bread, milk, coffee, laundry soap, etc.)</li>
-                      <li>Prime commodities (Fresh fruits, flour, canned goods, etc.)</li>
-                      <li className="text-red-600 font-semibold">No VAT discount except for agricultural/marine products in original state</li>
-                    </ul>
-                  </div>
-                  <div className="pt-4 border-t border-slate-200">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <p className="text-xs sm:text-sm text-blue-600 font-medium">
-                        Sources: RA 10754, RA 9994, RA 7581
-                      </p>
-                      <a
-                        href="https://www.officialgazette.gov.ph/2016/03/23/republic-act-no-10754/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-semibold group"
-                      >
-                        <span>View Official Law</span>
-                        <ExternalLink className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-                      </a>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+            <CoverageCard
+              isExpanded={isCoverageExpanded}
+              onToggle={() => setIsCoverageExpanded(prev => !prev)}
+              className="hidden lg:block"
+            />
           </div>
 
           {/* Receipt/Results - Mobile: Below Input, Desktop: Right Side */}
@@ -2538,6 +2485,33 @@ export function DiscountCalculator() {
                 </p>
               </CardFooter>
             </Card>
+
+            <CoverageCard
+              isExpanded={isCoverageExpanded}
+              onToggle={() => setIsCoverageExpanded(prev => !prev)}
+              className="mt-4 lg:hidden"
+            />
+
+            <div className="mt-4 rounded-2xl border-2 border-blue-100 bg-blue-50/70 p-4 sm:p-5 space-y-3 text-slate-700">
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-xl bg-white shadow-sm">
+                  <Info className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-blue-900 uppercase tracking-wide">Why this exists</p>
+                  <h3 className="text-lg font-bold text-slate-900">Karapat Discount by Adrian Sian</h3>
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed">
+                Adrian Sian built Karapat Discount for his girlfriend, his family, and every Filipino Senior or PWD who
+                needs to double-check receipts, cite the right laws, and feel confident asking for the benefits they already
+                earned. The app bundles the math, legal references, and escalation tips Adrian wished were available to his
+                loved ones whenever establishments miscalculated discounts.
+              </p>
+              <p className="text-xs text-slate-500 italic">
+                Built in the Philippines • Community-backed • Open to feedback
+              </p>
+            </div>
           </div>
         </div>
       </div>

@@ -828,15 +828,6 @@ export function DiscountCalculator() {
                         </div>
                       </div>
 
-                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 p-3 text-[11px] text-slate-600 leading-relaxed">
-                        <p className="font-semibold text-slate-800 mb-1">Receipt capture checklist</p>
-                        <ul className="space-y-1">
-                          <li>• Snap the subtotal, VAT, service charge, and total lines clearly.</li>
-                          <li>• Note the number of diners (e.g., “2 guests, 1 PWD”).</li>
-                          <li>• Copy the exact service-charge peso amount if you plan to audit it below.</li>
-                        </ul>
-                      </div>
-
                       {/* Toggle */}
                       <div className="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 hover:border-blue-300 transition-all min-h-[60px]">
                         <div className="space-y-0.5 flex-1">
@@ -850,13 +841,6 @@ export function DiscountCalculator() {
                             onCheckedChange={setIsRestaurant}
                           />
                         </div>
-                      </div>
-
-                      <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3 text-[11px] text-blue-800 leading-relaxed">
-                        <p className="font-semibold mb-1">Verification reminder</p>
-                        <p>
-                          If staff question your PWD/Senior ID, cite DOJ Opinion No. 45 (2024): verification cannot delay the discount. Offer to show your ID number or let them call OSCA/PDAO, but they must still compute the benefit right away.
-                        </p>
                       </div>
 
                       {/* Advanced Options for Mixed Transactions */}

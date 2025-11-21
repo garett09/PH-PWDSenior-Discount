@@ -178,6 +178,8 @@ export function DiscountCalculator() {
   const [numPwdSenior, setNumPwdSenior] = useState<string>('1')
   const [numRegular, setNumRegular] = useState<string>('0')
   const [diningMode, setDiningMode] = useState<'dine-in' | 'takeout'>('dine-in')
+  const [useMemcForDineIn, setUseMemcForDineIn] = useState(false)
+  const [memcPriceForDineIn, setMemcPriceForDineIn] = useState<string>('')
 
   // Groceries State
   const [gAmount, setGAmount] = useState<string>('')
@@ -519,6 +521,17 @@ export function DiscountCalculator() {
       // Total discounts
       vatDiscount = exclusiveVat + sharedVatDiscount
       discount20 = exclusiveDiscount20 + sharedDiscount20
+    } else if (isRestaurant && useMemcForDineIn && memcPriceForDineIn && parseFloat(memcPriceForDineIn) > 0) {
+      // MEMC Rule for Dine-in (when individual shares unclear)
+      const memc = parseFloat(memcPriceForDineIn)
+      const memcBase = memc / 1.12
+      const memcVat = memc - memcBase
+      
+      // MEMC discount applies per PWD/Senior
+      const eligibleCount = Math.min(pwdCount, totalDiners || pwdCount)
+      vatDiscount = memcVat * eligibleCount
+      discount20 = memcBase * 0.20 * eligibleCount
+      methodUsed = 'prorated' // Still considered prorated in method tracking
     } else if (isRestaurant) {
       // Standard Prorated (everyone shares equally)
       const baseAmount = amount / 1.12
@@ -758,7 +771,7 @@ export function DiscountCalculator() {
                             : 'text-slate-500 hover:text-slate-700'
                         )}
                       >
-                        Dine-in (Standard)
+                        Dine-in
                       </button>
                       <button
                         type="button"
@@ -770,7 +783,7 @@ export function DiscountCalculator() {
                             : 'text-slate-500 hover:text-slate-700'
                         )}
                       >
-                        Takeout (MEMC)
+                        Takeout
                       </button>
                     </div>
 
@@ -842,6 +855,57 @@ export function DiscountCalculator() {
                           />
                         </div>
                       </div>
+
+                      {/* MEMC Option for Dine-in */}
+                      {isRestaurant && (
+                        <div className="space-y-3">
+                          <div className="rounded-xl border-2 border-blue-100 bg-blue-50/60 p-3 text-xs text-blue-800 leading-relaxed mb-2">
+                            <p className="font-semibold mb-1">💡 DOJ Clarification (2024)</p>
+                            <p>
+                              For dine-in: If ALL food is exclusively for the PWD/Senior (even large orders), discount applies to the TOTAL amount. 
+                              MEMC rule below is an alternative when exclusive consumption cannot be clearly determined.
+                            </p>
+                          </div>
+                          <div className="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 hover:border-blue-300 transition-all min-h-[60px]">
+                            <div className="space-y-0.5 flex-1">
+                              <Label className="text-sm font-bold cursor-pointer text-slate-700" htmlFor="memc-dinein-toggle">Use MEMC Rule (Alternative)</Label>
+                              <p className="text-xs text-slate-500">When exclusive consumption cannot be verified (rare for dine-in)</p>
+                            </div>
+                            <div className="flex-shrink-0 ml-4">
+                              <CustomSwitch
+                                id="memc-dinein-toggle"
+                                checked={useMemcForDineIn}
+                                onCheckedChange={setUseMemcForDineIn}
+                              />
+                            </div>
+                          </div>
+                          
+                          {useMemcForDineIn && (
+                            <div className="space-y-2.5 rounded-xl border-2 border-indigo-200 bg-indigo-50/50 p-4 animate-in fade-in slide-in-from-top-2">
+                              <Label htmlFor="memc-price-dinein" className="text-sm font-semibold text-slate-700">
+                                Most Expensive Meal Price (MEMC)
+                              </Label>
+                              <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₱</span>
+                                <Input
+                                  id="memc-price-dinein"
+                                  type="number"
+                                  inputMode="decimal"
+                                  placeholder="0.00"
+                                  value={memcPriceForDineIn}
+                                  onChange={(e) => setMemcPriceForDineIn(e.target.value)}
+                                  className="pl-10 h-12 text-base font-semibold bg-white border-2 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl touch-manipulation"
+                                />
+                              </div>
+                              <p className="text-xs text-slate-600 leading-relaxed">
+                                Enter the price of the most expensive single-serving meal combination (e.g., 1pc Chicken Meal w/ Drink) as defined by the establishment. 
+                                <strong>Note:</strong> Per DOJ clarification, this is primarily for takeout/delivery when consumption cannot be verified. 
+                                For dine-in, if all items are exclusively for the PWD/Senior, the full discount should apply instead.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Advanced Options for Mixed Transactions */}
                       {isRestaurant && isAdvancedMode && (

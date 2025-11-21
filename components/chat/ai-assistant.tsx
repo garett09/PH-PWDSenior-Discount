@@ -212,6 +212,13 @@ interface ReceiptData {
     exclusiveAmount?: number
 }
 
+interface ReceiptHistoryEntry {
+    id: string
+    savedAt: string
+    data: ReceiptData
+    note?: string
+}
+
 interface AiAssistantProps {
     onReceiptDataExtracted?: (data: ReceiptData) => void
 }
@@ -250,14 +257,58 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
             localStorage.setItem('chat_messages', JSON.stringify(messages))
         }
     }, [messages, isLoaded])
+
     const [input, setInput] = useState('')
     const [isLoading, setIsLoading] = useState(false)
     const [attachedImage, setAttachedImage] = useState<string | null>(null) // base64
     const [imagePreview, setImagePreview] = useState<string | null>(null)
     const [extractedReceiptData, setExtractedReceiptData] = useState<ReceiptData | null>(null)
+    const [receiptHistory, setReceiptHistory] = useState<ReceiptHistoryEntry[]>([])
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+    const [isInsightsPanelOpen, setIsInsightsPanelOpen] = useState(false)
+    const [isTemplatePanelOpen, setIsTemplatePanelOpen] = useState(true)
+    const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null)
+    const [isHandoffOpen, setIsHandoffOpen] = useState(false)
+    const [isResponseModeOpen, setIsResponseModeOpen] = useState(true)
+    const [responseModeId, setResponseModeId] = useState<LawResponseMode['id']>(LAW_RESPONSE_MODES[0].id)
+    const [isAnalyzingReceipt, setIsAnalyzingReceipt] = useState(false)
+    useEffect(() => {
+        const savedHistory = localStorage.getItem('receipt_history')
+        if (savedHistory) {
+            try {
+                const parsed: ReceiptHistoryEntry[] = JSON.parse(savedHistory)
+                if (Array.isArray(parsed)) {
+                    setReceiptHistory(parsed)
+                }
+            } catch (error) {
+                console.error('Failed to load receipt history', error)
+            }
+        }
+    }, [])
+
+    useEffect(() => {
+        if (receiptHistory.length >= 0) {
+            localStorage.setItem('receipt_history', JSON.stringify(receiptHistory.slice(0, 8)))
+        }
+    }, [receiptHistory])
     const [viewportHeight, setViewportHeight] = useState<number | null>(null)
     const [windowHeight, setWindowHeight] = useState<number | null>(null)
     const [isMobileViewport, setIsMobileViewport] = useState(false)
+    const activeMode = useMemo(() => LAW_RESPONSE_MODES.find(mode => mode.id === responseModeId) ?? LAW_RESPONSE_MODES[0], [responseModeId])
+    const hasUserMessage = useMemo(() => messages.some(msg => msg.role === 'user'), [messages])
+    const shouldShowQuickActions = !hasUserMessage && !isLoading
+    const insightHighlights = useMemo(() => COMMUNITY_INSIGHTS.slice(0, 3), [])
+    const communityPromptSnippet = useMemo(
+        () =>
+            insightHighlights
+                .map(insight => `- ${insight.summary} (Source: ${insight.sourceUrl})`)
+                .join('\n'),
+        [insightHighlights]
+    )
+    const transcriptForEmail = useMemo(() => {
+        const recent = messages.slice(-6).map(msg => `${msg.role === 'user' ? 'User' : 'AI'}: ${msg.text}`).join('\n')
+        return encodeURIComponent(recent)
+    }, [messages])
     const scrollRef = useRef<HTMLDivElement>(null)
     const inputRef = useRef<HTMLInputElement>(null)
 
@@ -314,6 +365,10 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
         }
     }, [])
 
+    useEffect(() => {
+        setIsResponseModeOpen(!isMobileViewport)
+    }, [isMobileViewport])
+
     const keyboardOffset =
         !isMinimized &&
             isMobileViewport &&
@@ -344,6 +399,51 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
     const handleRemoveImage = () => {
         setAttachedImage(null)
         setImagePreview(null)
+    }
+
+    const handleQuickActionSelect = (action: QuickAction) => {
+        setInput(action.prompt)
+        if (action.modeId) {
+            setResponseModeId(action.modeId)
+        }
+        setSelectedTemplateId(null)
+    }
+
+    const handleTemplateUse = (template: ScenarioTemplate) => {
+        setInput(template.prompt)
+        setSelectedTemplateId(template.id)
+        setResponseModeId(template.recommendedMode)
+    }
+
+    const saveReceiptToHistory = (data: ReceiptData, note?: string) => {
+        const randomId =
+            typeof window !== 'undefined' && window.crypto?.randomUUID
+                ? window.crypto.randomUUID()
+                : `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+        const entry: ReceiptHistoryEntry = {
+            id: randomId,
+            savedAt: new Date().toISOString(),
+            data,
+            note
+        }
+        setReceiptHistory(prev => [entry, ...prev].slice(0, 8))
+    }
+
+    const handleRestoreReceiptFromHistory = (entry: ReceiptHistoryEntry) => {
+        setExtractedReceiptData(entry.data)
+        setIsHistoryOpen(false)
+        setMessages(prev => [
+            ...prev,
+            {
+                role: 'model',
+                text: `♻️ Loaded receipt saved on ${new Date(entry.savedAt).toLocaleString()}. Tap "Use This Receipt Data" to push it to the calculator or edit any fields before sending.`
+            }
+        ])
+    }
+
+    const handleClearHistory = () => {
+        setReceiptHistory([])
+        localStorage.removeItem('receipt_history')
     }
 
     const handleSend = async () => {

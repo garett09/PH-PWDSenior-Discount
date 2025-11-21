@@ -305,29 +305,6 @@ export function DiscountCalculator() {
     setChatbotReceiptData(null)
   }, [chatbotReceiptData])
 
-  const applyIssuePreset = (preset: IssuePreset) => {
-    setActiveTab('restaurant')
-    setIsRestaurant(parseInt(preset.diners.regular) > 0)
-    setRmAmount(preset.amount)
-    setNumPwdSenior(preset.diners.pwd)
-    setNumRegular(preset.diners.regular)
-    setIsAdvancedMode(Boolean(preset.advancedMode))
-    setCalculationMethod(preset.calculationMethod ?? 'prorated')
-    setHasServiceCharge(Boolean(preset.serviceCharge?.enabled))
-    if (preset.serviceCharge?.enabled && preset.serviceCharge.manualAmount !== undefined) {
-      setManualScMode(true)
-      setManualScAmount(preset.serviceCharge.manualAmount)
-    } else {
-      setManualScMode(false)
-      setManualScAmount('')
-    }
-    setActiveIssuePreset(preset)
-  }
-
-  const clearIssuePreset = () => {
-    setActiveIssuePreset(null)
-  }
-
   const formatCurrency = (value: number) => {
     return value.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })
   }
@@ -832,52 +809,6 @@ export function DiscountCalculator() {
                             Advanced
                           </button>
                         </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-semibold text-slate-500 tracking-wide uppercase">Reddit-tested presets</p>
-                          {activeIssuePreset && (
-                            <button
-                              type="button"
-                              onClick={clearIssuePreset}
-                              className="flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-700"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              Reset
-                            </button>
-                          )}
-                        </div>
-                        <div className="grid gap-2 sm:grid-cols-3">
-                          {ISSUE_PRESETS.map((preset) => (
-                            <button
-                              key={preset.id}
-                              type="button"
-                              onClick={() => applyIssuePreset(preset)}
-                              className={cn(
-                                'rounded-xl border-2 px-3 py-3 text-left transition-all touch-manipulation min-h-[90px]',
-                                activeIssuePreset?.id === preset.id
-                                  ? 'border-blue-600 bg-blue-50 shadow-sm'
-                                  : 'border-slate-200 bg-white hover:border-blue-300'
-                              )}
-                            >
-                              <p className="text-sm font-semibold text-slate-800">{preset.title}</p>
-                              <p className="text-[11px] text-slate-500 leading-snug mt-1">{preset.summary}</p>
-                            </button>
-                          ))}
-                        </div>
-                        {activeIssuePreset && (
-                          <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs text-blue-900 space-y-1 animate-in fade-in">
-                            <div className="flex items-center justify-between">
-                              <p className="font-semibold">Loaded: {activeIssuePreset.title}</p>
-                              <Button variant="ghost" size="icon" className="h-6 w-6 text-blue-700" onClick={clearIssuePreset}>
-                                <X className="w-3 h-3" />
-                              </Button>
-                            </div>
-                            <p>{activeIssuePreset.note}</p>
-                            <p className="text-[10px] uppercase tracking-wide font-semibold">{activeIssuePreset.laws}</p>
-                          </div>
-                        )}
                       </div>
 
                       {/* Amount Input */}

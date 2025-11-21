@@ -20,9 +20,13 @@ export function ComplaintGenerator() {
     const generateComplaint = () => {
         const violationText = {
             refusal: 'refusal to grant the mandated 20% discount and/or VAT exemption',
+            memc_refusal: 'refusal to apply the 20% discount on the Most Expensive Meal Combination (MEMC) for takeout/delivery orders as mandated by RR 7-2010',
             service_charge: 'illegal collection of service charge despite exemption',
             express_lane: 'failure to provide an express lane or priority service',
-            id_rejection: 'refusal to honor my valid PWD/Senior Citizen ID'
+            id_rejection: 'refusal to honor my valid PWD/Senior Citizen ID',
+            flat_discount: 'application of a flat discount amount instead of the mandated 20% discount and VAT exemption',
+            one_item_policy: 'application of discount to only one item despite the order being for personal consumption',
+            vat_only: 'granting of VAT exemption only without the corresponding 20% discount'
         }[violation]
 
         const law = 'Republic Act No. 10754 (An Act Expanding the Benefits and Privileges of Persons with Disability) and/or Republic Act No. 9994 (Expanded Senior Citizens Act of 2010)'
@@ -91,9 +95,13 @@ Sincerely,
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="refusal">Refused Discount/VAT Exemption</SelectItem>
+                            <SelectItem value="memc_refusal">Refused MEMC Rule (Takeout)</SelectItem>
                             <SelectItem value="service_charge">Charged Service Charge</SelectItem>
                             <SelectItem value="express_lane">No Express Lane/Priority</SelectItem>
                             <SelectItem value="id_rejection">Refused Valid ID</SelectItem>
+                            <SelectItem value="flat_discount">Flat Discount Applied (e.g. ₱50 off)</SelectItem>
+                            <SelectItem value="one_item_policy">One Item Policy (Personal Meal)</SelectItem>
+                            <SelectItem value="vat_only">VAT Exemption Only (No 20%)</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>

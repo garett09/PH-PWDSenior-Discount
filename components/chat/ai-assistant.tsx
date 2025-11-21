@@ -369,10 +369,7 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
     }, [isMobileViewport])
 
     const keyboardOffset =
-        !isMinimized &&
-            isMobileViewport &&
-            windowHeight !== null &&
-            viewportHeight !== null
+        !isMinimized && windowHeight !== null && viewportHeight !== null
             ? Math.max(windowHeight - viewportHeight, 0)
             : 0
     const containerClasses = cn(

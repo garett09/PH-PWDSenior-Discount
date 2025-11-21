@@ -1,13 +1,34 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card'
-import { MessageCircle, Send, X, Bot, User, Loader2, Sparkles, Minimize2, Maximize2, Paperclip, Image as ImageIcon } from 'lucide-react'
+import {
+    MessageCircle,
+    Send,
+    X,
+    Bot,
+    User,
+    Loader2,
+    Sparkles,
+    Minimize2,
+    Maximize2,
+    Paperclip,
+    Image as ImageIcon,
+    History,
+    Info,
+    PhoneForwarded,
+    ListChecks,
+    ChevronDown,
+    ChevronUp,
+    ClipboardList
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
+import { LAW_RESPONSE_MODES, LawResponseMode } from '@/components/chat/law-mode-map'
+import { COMMUNITY_INSIGHTS } from '@/components/chat/community-insights'
 
 import { LEGAL_KNOWLEDGE } from '@/components/chat/legal-knowledge'
 import { APP_KNOWLEDGE } from '@/components/chat/app-knowledge'
@@ -87,6 +108,93 @@ ${LEGAL_KNOWLEDGE}
 *** APPLICATION KNOWLEDGE (HOW THIS APP WORKS) ***
 ${APP_KNOWLEDGE}
 `
+
+type QuickAction = {
+    id: string
+    label: string
+    prompt: string
+    modeId?: LawResponseMode['id']
+    insightId?: string
+}
+
+type ScenarioTemplate = {
+    id: string
+    title: string
+    summary: string
+    prompt: string
+    recommendedMode: LawResponseMode['id']
+    insightId?: string
+}
+
+const COMMUNITY_INSIGHT_MAP = COMMUNITY_INSIGHTS.reduce<Record<string, typeof COMMUNITY_INSIGHTS[number]>>((acc, insight) => {
+    acc[insight.id] = insight
+    return acc
+}, {})
+
+const QUICK_ACTIONS: QuickAction[] = [
+    {
+        id: 'restaurant-breakdown',
+        label: 'Compute restaurant bill',
+        prompt: 'Please compute the correct VAT-exempt sale, 20% discount, and final net amount for a ₱1,250 dine-in restaurant bill with 3 diners (1 PWD). Show both exclusive-item and prorated tables.',
+        modeId: 'math',
+        insightId: 'mentalhealthph-flat-50'
+    },
+    {
+        id: 'service-charge-check',
+        label: 'Check service charge %',
+        prompt: 'A receipt shows subtotal ₱2,180, service charge ₱180, and 1 PWD diner. Help me confirm if SC is 10% of base amount and remind me how DOJ Opinion No. 45 treats the PWD share.',
+        modeId: 'legal',
+        insightId: 'mentalhealthph-flat-50'
+    },
+    {
+        id: 'escalation-letter',
+        label: 'Draft DTI/8888 note',
+        prompt: 'Draft a polite escalation letter citing RA 10754 and DOJ Opinion No. 45 for a café that only gave ₱25 off on a ₱397 solo order. Include the data I should attach (receipt, photos, ID).',
+        modeId: 'legal',
+        insightId: 'philippines-397-meal'
+    },
+    {
+        id: 'verification-script',
+        label: 'Verification script',
+        prompt: 'Give me a short script explaining that verification cannot delay the PWD discount, referencing DOJ Opinion No. 45 and tips on offering quick ID validation.',
+        modeId: 'primer',
+        insightId: 'fake-id-skepticism'
+    }
+]
+
+const SCENARIO_TEMPLATES: ScenarioTemplate[] = [
+    {
+        id: 'flat-50-cafe',
+        title: 'Flat ₱50 café deduction',
+        summary: 'Receipt lacks VAT/SC lines and cashier insists discount is fixed.',
+        prompt: 'I ordered an iced coffee and pastry costing ₱430 but the café only removed ₱50. Please show the correct VAT removal + 20% computation and give me talking points referencing RA 10754 and RA 10909.',
+        recommendedMode: 'primer',
+        insightId: 'mentalhealthph-flat-50'
+    },
+    {
+        id: '397-burger',
+        title: 'Burger shop gives ₱25 off',
+        summary: 'Owner says “1 food + 1 drink only” despite solo diner.',
+        prompt: 'Help me contest a burger shop that only deducted ₱25 from my ₱397 solo meal. Cite RA 10754, DOJ Opinion No. 45, and suggest how to escalate to DTI/8888 or the City Price Coordinating Council.',
+        recommendedMode: 'legal',
+        insightId: 'philippines-397-meal'
+    },
+    {
+        id: 'fake-id-worries',
+        title: 'Staff suspicious of IDs',
+        summary: 'Establishments fear fake cards and delay discounts.',
+        prompt: 'Give me a friendly script reassuring staff that my PWD ID is legitimate, plus instructions on how they can phone OSCA/PDAO or check the DOH registry without delaying the discount.',
+        recommendedMode: 'primer',
+        insightId: 'fake-id-skepticism'
+    },
+    {
+        id: 'group-prorated',
+        title: 'Split group bill',
+        summary: 'Need prorated math for 4 diners (1 Senior, 1 PWD).',
+        prompt: 'We have a ₱2,980 restaurant bill for 4 diners (1 Senior, 1 PWD). Please show prorated vs. exclusive computations, include service charge treatment, and remind us which receipts/photos to save for DTI.',
+        recommendedMode: 'math'
+    }
+]
 
 interface Message {
     role: 'user' | 'model'

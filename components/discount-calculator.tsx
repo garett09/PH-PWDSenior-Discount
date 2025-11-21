@@ -260,7 +260,7 @@ export function DiscountCalculator() {
 
   // Receipt Scanner Data from Chatbot
   const [chatbotReceiptData, setChatbotReceiptData] = useState<any>(null)
-  const [isCoverageExpanded, setIsCoverageExpanded] = useState(true)
+  const [isCoverageExpanded, setIsCoverageExpanded] = useState(false)
   // Handle receipt data from chatbot
   useEffect(() => {
     if (!chatbotReceiptData) return

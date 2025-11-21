@@ -106,21 +106,30 @@ SECTION 4. PRIVILEGES FOR THE SENIOR CITIZENS
    - Priority lanes in all commercial and government establishments.
 
 ---
-GUIDELINES FOR GROUP MEALS AND TAKEOUT (BIR & DTI RULES)
+GUIDELINES FOR GROUP MEALS AND TAKEOUT (DOJ CLARIFICATION & BIR RULES)
 
-1. DINE-IN GROUP MEALS (Sharing):
-   - The 20% discount and VAT exemption apply ONLY to the share of the Senior Citizen/PWD.
-   - Formula: (Total Bill / Number of Diners) = Individual Share.
-   - The discount applies to the Individual Share of the SC/PWD.
+**DOJ CLARIFICATION ON "EXCLUSIVE USE" PRINCIPLE:**
+The Department of Justice (DOJ) has clarified that "exclusive use" is the determining factor for PWD/Senior discounts, leading to different applications for dine-in versus delivery/takeout scenarios.
 
-2. TAKEOUT / DELIVERY / DRIVE-THRU (The MEMC Rule):
-   - When individual consumption cannot be clearly determined (e.g., family meals, group platters), the "Most Expensive Meal Combination" (MEMC) rule applies.
-   - The 20% discount and VAT exemption apply to the amount corresponding to the MEMC.
-   - MEMC Definition: The most expensive and biggest single-serving meal with beverage served by the establishment.
-   - Example: If a group orders a family platter, the discount applies only to the price of the most expensive solo meal (e.g., 1 pc Chicken Meal with drink), not the entire platter.
-   - EXCEPTION: If the group consists ENTIRELY of Senior Citizens/PWDs, the discount applies to the total bill.
+1. DINE-IN GROUP MEALS:
+   - **PRIMARY RULE (Exclusive Use):** If it can be clearly determined that ALL food and beverages are for the EXCLUSIVE consumption of the PWD/Senior (even if it's a large quantity or "group meal" order), the 20% discount and VAT exemption apply to the TOTAL amount of food purchased.
+   - **Example:** A PWD orders a family platter for their exclusive consumption - discount applies to the entire platter amount.
+   - **ALTERNATIVE (When Sharing with Others):** If the meal is shared with non-PWD/Senior diners, the discount applies ONLY to the PWD/Senior's proportional share.
+   - **Formula for Shared Meals:** (Total Bill / Number of Diners) = Individual Share. Discount applies to the Individual Share of the SC/PWD.
+   - **Note:** Some establishments may still apply the "most expensive meal" rule even for dine-in due to confusion or internal policy, though this is not the legal standard per DOJ clarification.
 
-3. "EXCLUSIVE USE" PRINCIPLE:
-   - The discount is for the exclusive use and enjoyment of the SC/PWD.
-   - For solo meals ordered by an SC/PWD (even for takeout), the full discount applies to that meal.
+2. ONLINE / DELIVERY / TAKEOUT / DRIVE-THRU (The MEMC Rule):
+   - **BIR Memorandum Circular No. 71-2022** specifies that when consumption cannot be verified (online/delivery), the 20% discount is calculated based on the "Most Expensive Meal Combination" (MEMC) rule.
+   - **Purpose:** To prevent abuse of the privilege when individual consumption cannot be verified.
+   - **MEMC Definition:** The most expensive and largest single-serving meal with beverage combination in the order.
+   - **Application:** The 20% discount and VAT exemption apply to the amount corresponding to the MEMC price.
+   - **Example:** If a group orders a family platter for delivery, the discount applies only to the price of the most expensive solo meal (e.g., 1 pc Chicken Meal with drink), not the entire platter.
+   - **EXCEPTION:** If the group consists ENTIRELY of Senior Citizens/PWDs, the discount applies to the total bill.
+
+3. "EXCLUSIVE USE" PRINCIPLE (Legal Basis):
+   - **Republic Act 10754 and its IRR** state that the discount is for the PWD/Senior's "exclusive use, enjoyment, or availment."
+   - **DOJ Interpretation:** For dine-in, if all items are exclusively for the PWD/Senior, the full amount qualifies for discount regardless of quantity.
+   - **For Delivery/Takeout:** MEMC rule applies as a safeguard when exclusive consumption cannot be verified at the point of purchase.
+
+**Reference:** DOJ Opinion clarifying application of PWD discounts for group meal purchases (2024). Inquirer.net article referencing BIR Memorandum Circular No. 71-2022.
 `

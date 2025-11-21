@@ -123,18 +123,23 @@ const RIGHTS = [
         bgColor: 'bg-indigo-100',
         shortDesc: '20% off on Most Expensive Meal (MEMC).',
         fullText: `
-      **BIR Revenue Regulations No. 7-2010 & RMC 71-2022:**
+      **BIR Revenue Regulations No. 7-2010, RMC 71-2022 & DOJ Clarification (2024):**
       
-      For takeout, delivery, and drive-thru orders where the PWD/Senior is not present or individual consumption cannot be determined, the **Most Expensive Meal Combination (MEMC)** rule applies.
+      **DINE-IN (DOJ Clarification):**
+      - If ALL food and beverages are for the EXCLUSIVE consumption of the PWD/Senior (even large orders), discount applies to the TOTAL amount.
+      - Example: A PWD orders a family platter exclusively for themselves → Full discount applies to entire platter.
       
-      **The Rule:**
-      The 20% discount and VAT exemption shall apply to the **Most Expensive Meal Combination (MEMC)** composed of a single serving of food with beverage.
+      **TAKEOUT/DELIVERY/DRIVE-THRU (MEMC Rule):**
+      - When consumption cannot be verified, the **Most Expensive Meal Combination (MEMC)** rule applies (per BIR RMC 71-2022).
+      - The 20% discount and VAT exemption apply to the MEMC price (single serving of food with beverage).
+      - Purpose: To prevent abuse when individual consumption cannot be verified at point of purchase.
       
       **Example:**
-      If you order a Family Bundle (₱1,500) and a separate Burger Meal (₱200), the discount applies to the Burger Meal (if it's the biggest single serving) or a prorated portion of the bundle equivalent to one person's meal.
+      - Takeout: Family Bundle (₱1,500) → Discount applies to MEMC (e.g., ₱200 Burger Meal), not the full bundle.
+      - Dine-in: Family Bundle (₱1,500) exclusively for PWD → Discount applies to full ₱1,500 (per DOJ clarification).
       
-      **Exclusive Use:**
-      The discount is for the exclusive use of the PWD/Senior Citizen. Group meals are not fully discounted, only the share of the PWD/Senior.
+      **Key Difference:**
+      "Exclusive use" determines eligibility. For dine-in, if consumption is verifiable and all items are exclusively for PWD/Senior, full discount applies. For takeout/delivery, MEMC rule applies as safeguard.
     `,
         sourceUrl: 'https://www.bir.gov.ph/images/bir_files/internal_communications_2/RMC%20No%2071-2022.pdf'
     }

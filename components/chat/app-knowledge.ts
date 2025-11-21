@@ -26,7 +26,16 @@ MODULE 1: DINING (RESTAURANT) CALCULATOR
        - *Exclusive Part:* The amount consumed ONLY by PWDs gets 100% discount (VAT Exempt + 20% off).
        - *Shared Part:* The remaining amount (Total - Exclusive) is prorated among ALL diners.
        - Total Discount = (Exclusive Discount) + (Shared Prorated Discount).
-  3. **Service Charge Exemption:**
+     - **Scenario D: Dine-in with ALL items for exclusive PWD/Senior consumption (DOJ Clarification 2024):**
+       - If ALL food and beverages are for the exclusive consumption of the PWD/Senior (even large orders), discount applies to the TOTAL amount.
+       - Formula: (Total Bill / 1.12) * 0.80 = Amount to Pay.
+       - This is the primary rule per DOJ clarification - "exclusive use" determines eligibility.
+     - **Scenario E: MEMC Rule (Most Expensive Meal Combination) - Optional for Dine-in, Required for Takeout/Delivery:**
+       - **For Takeout/Delivery:** Per BIR Memorandum Circular No. 71-2022, MEMC rule applies when consumption cannot be verified.
+       - **For Dine-in:** MEMC is an alternative when exclusive consumption cannot be clearly determined, but DOJ clarification states full discount should apply if all items are exclusively for PWD/Senior.
+       - MEMC Calculation: Discount = (MEMC Price / 1.12) * 0.20 per PWD/Senior.
+       - MEMC Definition: Most expensive single-serving meal with beverage combination.
+   3. **Service Charge Exemption:**
      - PWDs/Seniors are exempt from their share of the service charge.
      - Exemption = (Total Service Charge / Total Diners) * Number of PWDs.
 

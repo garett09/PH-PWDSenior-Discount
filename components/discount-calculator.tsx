@@ -980,7 +980,7 @@ export function DiscountCalculator() {
                                 <p className="text-xs text-slate-600">
                                   Tip: Copy the amount exactly as shown on the official receipt. We'll handle the exemption math automatically.
                                 </p>
-                                
+
                                 {/* Service Charge Percentage Finder */}
                                 {manualScAmount && parseFloat(manualScAmount) > 0 && rmAmount && parseFloat(rmAmount) > 0 && (
                                   <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
@@ -1488,14 +1488,14 @@ export function DiscountCalculator() {
 
                       <div className="p-4 md:p-6 bg-orange-50 border-2 border-orange-200 rounded-lg space-y-3">
                         <h5 className="font-bold text-orange-900 text-base sm:text-lg">Service Charge Exemption</h5>
-                        
+
                         <div>
                           <p className="text-sm text-orange-800 font-semibold mb-1">Republic Act No. 10754, Section 32:</p>
                           <p className="text-sm text-orange-700 leading-relaxed pl-4 border-l-2 border-orange-300">
                             PWDs are entitled to discounts and exemptions on "fees and charges relative to the utilization of all services in hotels and similar lodging establishments; restaurants and recreation centers."
                           </p>
                         </div>
-                        
+
                         <div className="pt-2 border-t border-orange-200">
                           <p className="text-sm text-orange-800 font-semibold mb-1">DOJ Opinion No. 45, Series of 2024:</p>
                           <p className="text-sm text-orange-700 leading-relaxed">

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PenTool, Upload, Printer, RefreshCw, Eraser, FileSignature, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import html2canvas from 'html2canvas'
+import * as htmlToImage from 'html-to-image'
 
 export function AuthorizationLetterGenerator() {
     const [formData, setFormData] = useState({
@@ -110,67 +110,20 @@ export function AuthorizationLetterGenerator() {
         if (!letterRef.current) return
 
         try {
-            // Try html2canvas first
-            const canvas = await html2canvas(letterRef.current, {
-                scale: 2,
+            // Use html-to-image which handles modern CSS better than html2canvas
+            const dataUrl = await htmlToImage.toPng(letterRef.current, {
+                quality: 1.0,
+                pixelRatio: 2,
                 backgroundColor: '#ffffff',
-                logging: false,
-                allowTaint: true,
-                useCORS: true,
-                onclone: (clonedDoc) => {
-                    const clonedElement = clonedDoc.querySelector('.print-letter')
-                    if (clonedElement) {
-                        (clonedElement as HTMLElement).style.setProperty('background-color', '#ffffff', 'important')
-                    }
-                }
             })
 
             const link = document.createElement('a')
             link.download = `authorization-letter-${formData.seniorName || 'unnamed'}-${new Date().toISOString().split('T')[0]}.png`
-            link.href = canvas.toDataURL('image/png')
+            link.href = dataUrl
             link.click()
         } catch (error) {
-            console.error('html2canvas failed:', error)
-
-            // Fallback: Open in new window for manual save
-            const printWindow = window.open('', '_blank')
-            if (printWindow && letterRef.current) {
-                printWindow.document.write(`
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <title>Authorization Letter - ${formData.seniorName || 'Unnamed'}</title>
-                        <style>
-                            body {
-                                margin: 0;
-                                padding: 20px;
-                                font-family: serif;
-                                background: white;
-                            }
-                            .letter-container {
-                                max-width: 21cm;
-                                margin: 0 auto;
-                                background: white;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="letter-container">
-                            ${letterRef.current.innerHTML}
-                        </div>
-                        <script>
-                            // Instructions for user
-                            setTimeout(() => {
-                                alert('To save as image:\\n\\n1. Right-click on the page\\n2. Select "Save as PDF" or "Print"\\n3. Choose "Save as PDF"\\n\\nOr use your browser\\'s screenshot tool (Cmd+Shift+4 on Mac, Windows+Shift+S on Windows)');
-                            }, 500);
-                        </script>
-                    </body>
-                    </html>
-                `)
-                printWindow.document.close()
-            } else {
-                alert('Unable to save as image. Please try using the Print button instead, then save as PDF.')
-            }
+            console.error('Failed to save as image:', error)
+            alert('Failed to save as image. Please try using the Print button instead, then save as PDF.')
         }
     }
 

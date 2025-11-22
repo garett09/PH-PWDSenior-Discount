@@ -137,23 +137,24 @@ export function AuthorizationLetterGenerator() {
 
     return (
         <>
-            <style jsx global>{`
-                @media print {
-                    body * {
-                        visibility: hidden;
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                    @media print {
+                        body * {
+                            visibility: hidden;
+                        }
+                        .print-letter, .print-letter * {
+                            visibility: visible;
+                        }
+                        .print-letter {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                        }
                     }
-                    .print-letter, .print-letter * {
-                        visibility: visible;
-                    }
-                    .print-letter {
-                        position: absolute;
-                        left: 0;
-                        top: 0;
-                        width: 100%;
-                    }
-                }
-            `}</style>
-
+                `
+            }} />
             <div className="grid lg:grid-cols-2 gap-8">
                 {/* Input Section - Hidden on Print */}
                 <div className="space-y-6 print:hidden">

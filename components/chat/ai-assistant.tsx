@@ -1138,6 +1138,21 @@ ${activeMode.promptAddendum}
                                         <Paperclip className="h-5 w-5" />
                                     </Button>
 
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={startListening}
+                                        disabled={isLoading || isListening}
+                                        className={cn(
+                                            "shrink-0 text-slate-600 hover:text-indigo-600",
+                                            isListening && "text-red-500 animate-pulse"
+                                        )}
+                                        title={isListening ? "Listening..." : "Voice input"}
+                                    >
+                                        <Mic className="h-5 w-5" />
+                                    </Button>
+
                                     <Textarea
                                         ref={inputRef}
                                         placeholder="Ask about discounts or upload receipt..."

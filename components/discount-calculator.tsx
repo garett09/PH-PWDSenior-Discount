@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Calculator, ShoppingCart, Utensils, Pill, Zap, Plane, Scale, Info, Receipt, Users, Percent, Sparkles, ExternalLink, FileText, X, RotateCcw, Copy, Check, ChevronDown, ChevronUp, Save, Clock, Share2 } from 'lucide-react'
+import { Calculator, ShoppingCart, Utensils, Pill, Zap, Plane, Scale, Info, Receipt, Users, Percent, Sparkles, ExternalLink, FileText, X, RotateCcw, Copy, Check, ChevronDown, ChevronUp, Save, Clock, Share2, TrendingUp, MapPin } from 'lucide-react'
 import { saveCalculation, getSavedCalculations, deleteCalculation, formatCalculationForSharing, type SavedCalculation } from '@/lib/storage-utils'
 import { MedicineCalculator } from '@/components/calculators/medicine-calculator'
 import { UtilitiesCalculator } from '@/components/calculators/utilities-calculator'
@@ -12,9 +12,16 @@ import { RightsFlashcards } from '@/components/legal/rights-flashcards'
 import { ComplaintGenerator } from '@/components/legal/complaint-generator'
 import { CityOrdinanceChecker } from '@/components/city/city-ordinance-checker'
 import { AiAssistant } from '@/components/chat/ai-assistant'
+import { AuthorizationLetterGenerator } from '@/components/legal/authorization-letter-generator'
+import { SavingsDashboard } from '@/components/dashboard/savings-dashboard'
+import { OfflineEmergencyCard } from '@/components/legal/offline-card'
+import { GroceryOptimizer } from '@/components/calculators/grocery-optimizer'
+import { EstablishmentTracker } from '@/components/dashboard/establishment-tracker'
+import { LegalSection } from '@/components/legal/legal-section'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
+import { useI18n } from '@/lib/i18n-context'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Switch } from '@/components/ui/switch'
@@ -166,12 +173,27 @@ function CoverageCard({ isExpanded, onToggle, className }: CoverageCardProps) {
 }
 
 export function DiscountCalculator() {
+  const { t, language, setLanguage } = useI18n()
+  const [activeCategory, setActiveCategory] = useState<'calculators' | 'tools'>('calculators')
+  const [activeTab, setActiveTab] = useState('restaurant')
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+
+
   // Restaurant/Medicine State
   const [rmAmount, setRmAmount] = useState<string>('')
   const [isRestaurant, setIsRestaurant] = useState(false)
+  const [billAmount, setBillAmount] = useState('')
+  const [diners, setDiners] = useState('1')
+  const [pwdCount, setPwdCount] = useState('1')
   const [hasServiceCharge, setHasServiceCharge] = useState(false)
   const [serviceChargeRate, setServiceChargeRate] = useState<string>('10')
   const [serviceChargeBase, setServiceChargeBase] = useState<'gross' | 'net' | 'post'>('gross')
+  const [serviceChargeAmount, setServiceChargeAmount] = useState<string>('')
   const [serviceChargeExcluded, setServiceChargeExcluded] = useState<string>('0')
   const [manualScMode, setManualScMode] = useState(false)
   const [manualScAmount, setManualScAmount] = useState<string>('')
@@ -181,9 +203,40 @@ export function DiscountCalculator() {
   const [useMemcForDineIn, setUseMemcForDineIn] = useState(false)
   const [memcPriceForDineIn, setMemcPriceForDineIn] = useState<string>('')
 
-  // Groceries State
+  const [calculationMode, setCalculationMode] = useState<'prorated' | 'exclusive'>('prorated')
+  const [exclusiveAmount, setExclusiveAmount] = useState<string>('')
+  const [vatExemptSales, setVatExemptSales] = useState<number>(0)
+  const [discountAmount, setDiscountAmount] = useState<number>(0)
+  const [netPayable, setNetPayable] = useState<number>(0)
+  const [individualShare, setIndividualShare] = useState<number>(0)
+  const [showResults, setShowResults] = useState(false)
+
+  // Grocery State
   const [gAmount, setGAmount] = useState<string>('')
-  const [gRemaining, setGRemaining] = useState<string>('2500.00')
+  const [gRemaining, setGRemaining] = useState<string>('1300')
+  const [gDiscount, setGDiscount] = useState<number>(0)
+  const [gPayable, setGPayable] = useState<number>(0)
+  const [gShowResults, setGShowResults] = useState(false)
+
+  // Utilities State
+  const [uAmount, setUAmount] = useState<string>('')
+  const [uType, setUType] = useState<'electricity' | 'water'>('electricity')
+  const [uConsumption, setUConsumption] = useState<string>('')
+  const [uDiscount, setUDiscount] = useState<number>(0)
+  const [uPayable, setUPayable] = useState<number>(0)
+  const [uShowResults, setUShowResults] = useState(false)
+
+  // Transport State
+  const [tFare, setTFare] = useState<string>('')
+  const [tType, setTType] = useState<'land' | 'air' | 'sea'>('land')
+  const [tDiscount, setTDiscount] = useState<number>(0)
+  const [tPayable, setTPayable] = useState<number>(0)
+  const [tShowResults, setTShowResults] = useState(false)
+
+  // Effect to update isRestaurant based on activeTab
+  useEffect(() => {
+    setIsRestaurant(activeTab === 'restaurant')
+  }, [activeTab])
 
   // Results
   const [rmResult, setRmResult] = useState<{
@@ -234,9 +287,6 @@ export function DiscountCalculator() {
     amountToPay: number
     totalSaved: number
   } | null>(null)
-
-  // Active tab state
-  const [activeTab, setActiveTab] = useState('restaurant')
 
   // UI State for enhancements
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -306,6 +356,10 @@ export function DiscountCalculator() {
     // Clear the data after processing
     setChatbotReceiptData(null)
   }, [chatbotReceiptData])
+
+  if (!mounted) {
+    return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50" />
+  }
 
   const formatCurrency = (value: number) => {
     return value.toLocaleString('en-PH', { style: 'currency', currency: 'PHP' })
@@ -526,7 +580,7 @@ export function DiscountCalculator() {
       const memc = parseFloat(memcPriceForDineIn)
       const memcBase = memc / 1.12
       const memcVat = memc - memcBase
-      
+
       // MEMC discount applies per PWD/Senior
       const eligibleCount = Math.min(pwdCount, totalDiners || pwdCount)
       vatDiscount = memcVat * eligibleCount
@@ -641,22 +695,49 @@ export function DiscountCalculator() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
-
       <div className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 space-y-4 md:space-y-6 lg:space-y-8 lg:px-4 xl:px-8">
-        <div className="text-center space-y-3 py-4 md:py-6">
+
+        {/* Header Section */}
+        <div className="text-center space-y-4 py-4 md:py-6">
+
+          {/* Language Toggle */}
+          <div className="flex justify-center items-center gap-2 mb-2">
+            <div className="flex bg-white rounded-full p-1 shadow-sm border border-slate-200">
+              <button
+                onClick={() => setLanguage('en')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${language === 'en' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLanguage('fil')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${language === 'fil' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                FIL
+              </button>
+              <button
+                onClick={() => setLanguage('ceb')}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${language === 'ceb' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                CEB
+              </button>
+            </div>
+          </div>
+
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-sm font-medium mb-2">
             <Sparkles className="w-4 h-4" />
-            <span>Karapat Discount</span>
+            <span>{t('appTitle')}</span>
           </div>
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-900 tracking-tight px-4">
-            Senior Citizen & PWD
-            <span className="block text-blue-600">Discount Calculator</span>
+
+          <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Senior Citizen & PWD <span className="text-blue-600">Discount Calculator</span>
           </h1>
-          <p className="text-slate-600 max-w-2xl mx-auto text-base md:text-lg px-4 leading-relaxed">
-            Compute your entitled discounts for dining, medicine, and groceries
+
+          <p className="text-slate-500 text-lg max-w-2xl mx-auto">
+            {t('appSubtitle')}
           </p>
 
-          {/* Law Reference Banner - Mobile First */}
+          {/* Law Reference Banner */}
           <div className="max-w-4xl mx-auto px-4 mt-4">
             <a
               href="https://www.officialgazette.gov.ph/2016/03/23/republic-act-no-10754/"
@@ -700,63 +781,140 @@ export function DiscountCalculator() {
               </CardHeader>
 
               <CardContent className="pt-4 md:pt-6">
+                {/* Category Switcher */}
+                <div className="flex p-1 bg-slate-100 rounded-xl mb-4">
+                  <button
+                    onClick={() => {
+                      setActiveCategory('calculators')
+                      setActiveTab('restaurant')
+                    }}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeCategory === 'calculators'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    {t('categories.calculators')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setActiveCategory('tools')
+                      setActiveTab('auth-letter')
+                    }}
+                    className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${activeCategory === 'tools'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                  >
+                    {t('categories.tools')}
+                  </button>
+                </div>
+
                 <Tabs defaultValue="restaurant" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-4 md:mb-6 lg:mb-8 h-auto lg:h-14 bg-slate-100 p-1 md:p-1.5 rounded-xl gap-1">
-                    <TabsTrigger
-                      value="restaurant"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
-                    >
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-                        <Utensils className="w-4 h-4" />
-                        <span>Dining</span>
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="medicine"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
-                    >
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-                        <Pill className="w-4 h-4" />
-                        <span>Meds</span>
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="groceries"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
-                    >
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-                        <ShoppingCart className="w-4 h-4" />
-                        <span>Grocery</span>
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="utilities"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
-                    >
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-                        <Zap className="w-4 h-4" />
-                        <span>Utility</span>
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="transport"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
-                    >
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-                        <Plane className="w-4 h-4" />
-                        <span>Travel</span>
-                      </div>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="more"
-                      className="data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
-                    >
-                      <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
-                        <Scale className="w-4 h-4" />
-                        <span>Legal</span>
-                      </div>
-                    </TabsTrigger>
+                  <TabsList className="flex flex-wrap w-full mb-4 md:mb-6 lg:mb-8 h-auto bg-slate-100 p-1 md:p-1.5 rounded-xl gap-1">
+                    {activeCategory === 'calculators' ? (
+                      <>
+                        <TabsTrigger
+                          value="restaurant"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <Utensils className="w-4 h-4" />
+                            <span>{t('tabs.dining')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="medicine"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <Pill className="w-4 h-4" />
+                            <span>{t('tabs.medicine')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="groceries"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <ShoppingCart className="w-4 h-4" />
+                            <span>{t('tabs.groceries')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="utilities"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <Zap className="w-4 h-4" />
+                            <span>{t('tabs.utilities')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="transport"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <Plane className="w-4 h-4" />
+                            <span>{t('tabs.transport')}</span>
+                          </div>
+                        </TabsTrigger>
+                      </>
+                    ) : (
+                      <>
+                        <TabsTrigger
+                          value="auth-letter"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <FileText className="w-4 h-4" />
+                            <span>{t('tabs.letter')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="savings"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <TrendingUp className="w-4 h-4" />
+                            <span>{t('tabs.savings')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="places"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>{t('tabs.places')}</span>
+                          </div>
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="legal"
+                          className="flex-1 min-w-[90px] data-[state=active]:bg-white data-[state=active]:shadow-md rounded-lg text-xs md:text-sm font-semibold transition-all min-h-[44px] touch-manipulation"
+                        >
+                          <div className="flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2">
+                            <Scale className="w-4 h-4" />
+                            <span>{t('tabs.legal')}</span>
+                          </div>
+                        </TabsTrigger>
+                      </>
+                    )}
                   </TabsList>
+
+                  <TabsContent value="auth-letter" className="mt-0">
+                    <AuthorizationLetterGenerator />
+                  </TabsContent>
+
+                  <TabsContent value="savings" className="mt-0">
+                    <SavingsDashboard />
+                  </TabsContent>
+                  <TabsContent value="places" className="mt-0">
+                    <EstablishmentTracker />
+                  </TabsContent>
+
+                  <TabsContent value="legal" className="mt-0">
+                    <LegalSection />
+                  </TabsContent>
 
                   <TabsContent value="restaurant" className="space-y-4 md:space-y-6 mt-0">
                     {/* Dining Mode Toggle */}
@@ -857,55 +1015,7 @@ export function DiscountCalculator() {
                       </div>
 
                       {/* MEMC Option for Dine-in */}
-                      {isRestaurant && (
-                        <div className="space-y-3">
-                          <div className="rounded-xl border-2 border-blue-100 bg-blue-50/60 p-3 text-xs text-blue-800 leading-relaxed mb-2">
-                            <p className="font-semibold mb-1">💡 DOJ Clarification (2024)</p>
-                            <p>
-                              For dine-in: If ALL food is exclusively for the PWD/Senior (even large orders), discount applies to the TOTAL amount. 
-                              MEMC rule below is an alternative when exclusive consumption cannot be clearly determined.
-                            </p>
-                          </div>
-                          <div className="flex items-center justify-between p-4 rounded-xl border-2 border-slate-200 bg-gradient-to-br from-white to-slate-50 hover:border-blue-300 transition-all min-h-[60px]">
-                            <div className="space-y-0.5 flex-1">
-                              <Label className="text-sm font-bold cursor-pointer text-slate-700" htmlFor="memc-dinein-toggle">Use MEMC Rule (Alternative)</Label>
-                              <p className="text-xs text-slate-500">When exclusive consumption cannot be verified (rare for dine-in)</p>
-                            </div>
-                            <div className="flex-shrink-0 ml-4">
-                              <CustomSwitch
-                                id="memc-dinein-toggle"
-                                checked={useMemcForDineIn}
-                                onCheckedChange={setUseMemcForDineIn}
-                              />
-                            </div>
-                          </div>
-                          
-                          {useMemcForDineIn && (
-                            <div className="space-y-2.5 rounded-xl border-2 border-indigo-200 bg-indigo-50/50 p-4 animate-in fade-in slide-in-from-top-2">
-                              <Label htmlFor="memc-price-dinein" className="text-sm font-semibold text-slate-700">
-                                Most Expensive Meal Price (MEMC)
-                              </Label>
-                              <div className="relative">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-lg">₱</span>
-                                <Input
-                                  id="memc-price-dinein"
-                                  type="number"
-                                  inputMode="decimal"
-                                  placeholder="0.00"
-                                  value={memcPriceForDineIn}
-                                  onChange={(e) => setMemcPriceForDineIn(e.target.value)}
-                                  className="pl-10 h-12 text-base font-semibold bg-white border-2 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20 rounded-xl touch-manipulation"
-                                />
-                              </div>
-                              <p className="text-xs text-slate-600 leading-relaxed">
-                                Enter the price of the most expensive single-serving meal combination (e.g., 1pc Chicken Meal w/ Drink) as defined by the establishment. 
-                                <strong>Note:</strong> Per DOJ clarification, this is primarily for takeout/delivery when consumption cannot be verified. 
-                                For dine-in, if all items are exclusively for the PWD/Senior, the full discount should apply instead.
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+
 
                       {/* Advanced Options for Mixed Transactions */}
                       {isRestaurant && isAdvancedMode && (
@@ -1358,6 +1468,40 @@ export function DiscountCalculator() {
                             <div className="pt-2">
                               <CoverageLegalContent />
                             </div>
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="complaint" className="border-b-0">
+                          <AccordionTrigger className="hover:no-underline hover:bg-slate-50 px-4 rounded-lg">
+                            <div className="flex items-center gap-3 text-left">
+                              <div className="p-2 bg-red-100 rounded-lg">
+                                <FileText className="w-5 h-5 text-red-600" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900">File a Complaint</p>
+                                <p className="text-xs text-slate-500 font-normal">Generate a formal letter for violations</p>
+                              </div>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pt-2 pb-6">
+                            <ComplaintGenerator />
+                          </AccordionContent>
+                        </AccordionItem>
+
+                        <AccordionItem value="offline-card" className="border-b-0">
+                          <AccordionTrigger className="hover:no-underline hover:bg-slate-50 px-4 rounded-lg">
+                            <div className="flex items-center gap-3 text-left">
+                              <div className="p-2 bg-slate-800 rounded-lg">
+                                <Zap className="w-5 h-5 text-yellow-400" />
+                              </div>
+                              <div>
+                                <p className="font-bold text-slate-900">Offline Emergency Card</p>
+                                <p className="text-xs text-slate-500 font-normal">Save your rights for offline use</p>
+                              </div>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pt-2 pb-6">
+                            <OfflineEmergencyCard />
                           </AccordionContent>
                         </AccordionItem>
                       </Accordion>
@@ -2580,6 +2724,6 @@ export function DiscountCalculator() {
         </div>
       </div>
       <AiAssistant onReceiptDataExtracted={(data) => setChatbotReceiptData(data)} />
-    </div>
+    </div >
   )
 }

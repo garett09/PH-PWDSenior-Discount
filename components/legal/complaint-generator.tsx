@@ -139,9 +139,12 @@ Sincerely,
                             {generated}
                         </pre>
                         <div className="mt-4 flex gap-2">
-                            <Button variant="default" className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={() => window.open(`mailto:?subject=Complaint&body=${encodeURIComponent(generated)}`)}>
+                            <Button variant="default" className="flex-1 bg-blue-600 hover:bg-blue-700" onClick={() => {
+                                const subject = `Complaint: Violation of RA 10754 - ${merchant || '[Merchant Name]'}`
+                                window.open(`mailto:consumer@dti.gov.ph?cc=8888@gov.ph&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(generated)}`)
+                            }}>
                                 <Send className="w-4 h-4 mr-2" />
-                                Send via Email
+                                Send to DTI & 8888
                             </Button>
                         </div>
                     </CardContent>

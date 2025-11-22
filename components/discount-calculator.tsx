@@ -2567,10 +2567,10 @@ export function DiscountCalculator() {
                 </div>
               </div>
               <p className="text-sm leading-relaxed">
-                Adrian Sian built Karapat Discount for his girlfriend, his family, and every Filipino Senior or PWD who
+                Adrian Sian built Karapat Discount for his girlfriend and every Filipino Senior or PWD who
                 needs to double-check receipts, cite the right laws, and feel confident asking for the benefits they already
-                earned. The app bundles the math, legal references, and escalation tips Adrian wished were available to his
-                loved ones whenever establishments miscalculated discounts.
+                earned. The app bundles the math, legal references, and escalation tips Adrian wished were available whenever
+                establishments miscalculated discounts.
               </p>
               <p className="text-xs text-slate-500 italic">
                 Built in the Philippines • Community-backed • Open to feedback

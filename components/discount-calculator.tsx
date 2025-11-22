@@ -725,15 +725,9 @@ export function DiscountCalculator() {
           </div>
 
           {/* Main App Title */}
-          <div className="space-y-2">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 tracking-tight">
-              Karapat Discount
-            </h1>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-100 text-blue-700 text-xs md:text-sm font-bold">
-              <Sparkles className="w-3 h-3 md:w-4 md:h-4" />
-              <span>{t('appTitle')}</span>
-            </div>
-          </div>
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 tracking-tight">
+            Karapat Discount
+          </h1>
 
           <h2 className="text-xl md:text-2xl font-bold text-slate-700 tracking-tight">
             Senior Citizen & PWD <span className="text-blue-600">Discount Calculator</span>

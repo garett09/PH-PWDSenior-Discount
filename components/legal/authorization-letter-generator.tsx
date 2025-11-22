@@ -110,6 +110,7 @@ export function AuthorizationLetterGenerator() {
         if (!letterRef.current) return
 
         try {
+            // Try html2canvas first
             const canvas = await html2canvas(letterRef.current, {
                 scale: 2,
                 backgroundColor: '#ffffff',
@@ -119,7 +120,6 @@ export function AuthorizationLetterGenerator() {
                 onclone: (clonedDoc) => {
                     const clonedElement = clonedDoc.querySelector('.print-letter')
                     if (clonedElement) {
-                        // Ensure the main container has white background
                         (clonedElement as HTMLElement).style.setProperty('background-color', '#ffffff', 'important')
                     }
                 }
@@ -130,8 +130,47 @@ export function AuthorizationLetterGenerator() {
             link.href = canvas.toDataURL('image/png')
             link.click()
         } catch (error) {
-            console.error('Failed to save as image:', error)
-            alert('Failed to save as image. Please try again.')
+            console.error('html2canvas failed:', error)
+
+            // Fallback: Open in new window for manual save
+            const printWindow = window.open('', '_blank')
+            if (printWindow && letterRef.current) {
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>Authorization Letter - ${formData.seniorName || 'Unnamed'}</title>
+                        <style>
+                            body {
+                                margin: 0;
+                                padding: 20px;
+                                font-family: serif;
+                                background: white;
+                            }
+                            .letter-container {
+                                max-width: 21cm;
+                                margin: 0 auto;
+                                background: white;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="letter-container">
+                            ${letterRef.current.innerHTML}
+                        </div>
+                        <script>
+                            // Instructions for user
+                            setTimeout(() => {
+                                alert('To save as image:\\n\\n1. Right-click on the page\\n2. Select "Save as PDF" or "Print"\\n3. Choose "Save as PDF"\\n\\nOr use your browser\\'s screenshot tool (Cmd+Shift+4 on Mac, Windows+Shift+S on Windows)');
+                            }, 500);
+                        </script>
+                    </body>
+                    </html>
+                `)
+                printWindow.document.close()
+            } else {
+                alert('Unable to save as image. Please try using the Print button instead, then save as PDF.')
+            }
         }
     }
 

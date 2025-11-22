@@ -156,9 +156,9 @@ export function AuthorizationLetterGenerator() {
                     }
                 `
             }} />
-            <div className="grid lg:grid-cols-2 gap-8">
+            <div className="grid lg:grid-cols-5 gap-8">
                 {/* Input Section - Hidden on Print */}
-                <div className="space-y-6 print:hidden">
+                <div className="lg:col-span-2 space-y-6 print:hidden">
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -302,8 +302,8 @@ export function AuthorizationLetterGenerator() {
                 </div>
 
                 {/* Letter Preview - Visible on Print */}
-                <div ref={letterRef} className="print-letter bg-white p-8 shadow-lg rounded-xl print:shadow-none print:p-0 print:w-full print:absolute print:top-0 print:left-0 print:m-0">
-                    <div className="max-w-[21cm] mx-auto space-y-8 text-slate-900 font-serif">
+                <div ref={letterRef} className="lg:col-span-3 print-letter bg-white p-6 md:p-8 lg:p-12 shadow-lg rounded-xl print:shadow-none print:p-0 print:w-full print:absolute print:top-0 print:left-0 print:m-0">
+                    <div className="max-w-full mx-auto space-y-6 md:space-y-8 text-slate-900 font-serif">
                         {/* Header */}
                         <div className="text-center space-y-1 border-b pb-6">
                             <h1 className="text-2xl font-bold uppercase tracking-wide">Authorization Letter</h1>

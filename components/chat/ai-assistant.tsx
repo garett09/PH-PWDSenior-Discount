@@ -22,7 +22,10 @@ import {
     ListChecks,
     ChevronDown,
     ChevronUp,
-    ClipboardList
+    ClipboardList,
+    Mic,
+    Volume2,
+    VolumeX
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import ReactMarkdown from 'react-markdown'
@@ -271,6 +274,68 @@ export function AiAssistant({ onReceiptDataExtracted }: AiAssistantProps = {}) {
     const [isResponseModeOpen, setIsResponseModeOpen] = useState(true)
     const [responseModeId, setResponseModeId] = useState<LawResponseMode['id']>(LAW_RESPONSE_MODES[0].id)
     const [isAnalyzingReceipt, setIsAnalyzingReceipt] = useState(false)
+
+    // Voice Mode State
+    const [isListening, setIsListening] = useState(false)
+    const [isSpeaking, setIsSpeaking] = useState(false)
+    const [voiceEnabled, setVoiceEnabled] = useState(false)
+
+    // Speech Recognition
+    const startListening = () => {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
+            const recognition = new SpeechRecognition()
+            recognition.lang = 'en-PH' // Default to PH English, could be dynamic later
+            recognition.interimResults = false
+            recognition.maxAlternatives = 1
+
+            recognition.onstart = () => setIsListening(true)
+            recognition.onend = () => setIsListening(false)
+            recognition.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript
+                setInput(prev => prev + (prev ? ' ' : '') + transcript)
+            }
+            recognition.onerror = (event: any) => {
+                console.error('Speech recognition error', event.error)
+                setIsListening(false)
+            }
+
+            recognition.start()
+        } else {
+            alert('Voice input is not supported in this browser.')
+        }
+    }
+
+    // Text to Speech
+    const speak = (text: string) => {
+        if (!voiceEnabled) return
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel() // Stop previous
+            const utterance = new SpeechSynthesisUtterance(text)
+            utterance.lang = 'en-PH'
+            utterance.onstart = () => setIsSpeaking(true)
+            utterance.onend = () => setIsSpeaking(false)
+            utterance.onerror = () => setIsSpeaking(false)
+            window.speechSynthesis.speak(utterance)
+        }
+    }
+
+    const stopSpeaking = () => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel()
+            setIsSpeaking(false)
+        }
+    }
+
+    // Auto-speak response if voice enabled
+    useEffect(() => {
+        const lastMessage = messages[messages.length - 1]
+        if (voiceEnabled && lastMessage?.role === 'model' && !isLoading) {
+            // Strip markdown for cleaner speech
+            const cleanText = lastMessage.text.replace(/[*#_`]/g, '')
+            speak(cleanText)
+        }
+    }, [messages, voiceEnabled, isLoading])
     useEffect(() => {
         const savedHistory = localStorage.getItem('receipt_history')
         if (savedHistory) {
@@ -684,6 +749,21 @@ ${activeMode.promptAddendum}
                             onClick={() => setIsOpen(false)}
                         >
                             <X className="h-4 w-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                'h-8 w-8 text-blue-100 hover:text-white hover:bg-white/20',
+                                voiceEnabled && 'bg-white/20 text-white'
+                            )}
+                            onClick={() => {
+                                setVoiceEnabled(!voiceEnabled)
+                                if (voiceEnabled) stopSpeaking()
+                            }}
+                            title={voiceEnabled ? "Disable Voice Mode" : "Enable Voice Mode"}
+                        >
+                            {voiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
                         </Button>
                     </div>
                 </CardHeader>

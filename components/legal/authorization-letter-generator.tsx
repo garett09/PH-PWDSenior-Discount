@@ -117,17 +117,10 @@ export function AuthorizationLetterGenerator() {
                 allowTaint: true,
                 useCORS: true,
                 onclone: (clonedDoc) => {
-                    // Force all colors to be standard RGB/hex to avoid lab() color issues
                     const clonedElement = clonedDoc.querySelector('.print-letter')
                     if (clonedElement) {
-                        // Remove any problematic gradient backgrounds
-                        const allElements = clonedElement.querySelectorAll('*')
-                        allElements.forEach((el: any) => {
-                            const computedStyle = window.getComputedStyle(el)
-                            if (computedStyle.backgroundColor && computedStyle.backgroundColor.includes('lab')) {
-                                el.style.backgroundColor = '#ffffff'
-                            }
-                        })
+                        // Ensure the main container has white background
+                        (clonedElement as HTMLElement).style.setProperty('background-color', '#ffffff', 'important')
                     }
                 }
             })

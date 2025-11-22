@@ -1066,7 +1066,7 @@ ${activeMode.promptAddendum}
                                         onKeyDown={handleKeyDown}
                                         disabled={isLoading}
                                         rows={1}
-                                        className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 resize-none overflow-y-auto text-sm"
+                                        className="flex-1 bg-slate-50 border-slate-200 focus-visible:ring-indigo-500 resize-none overflow-y-auto"
                                     />
                                     <Button
                                         onClick={handleSend}

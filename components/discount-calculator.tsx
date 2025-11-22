@@ -233,10 +233,7 @@ export function DiscountCalculator() {
   const [tPayable, setTPayable] = useState<number>(0)
   const [tShowResults, setTShowResults] = useState(false)
 
-  // Effect to update isRestaurant based on activeTab
-  useEffect(() => {
-    setIsRestaurant(activeTab === 'restaurant')
-  }, [activeTab])
+
 
   // Results
   const [rmResult, setRmResult] = useState<{

@@ -113,7 +113,23 @@ export function AuthorizationLetterGenerator() {
             const canvas = await html2canvas(letterRef.current, {
                 scale: 2,
                 backgroundColor: '#ffffff',
-                logging: false
+                logging: false,
+                allowTaint: true,
+                useCORS: true,
+                onclone: (clonedDoc) => {
+                    // Force all colors to be standard RGB/hex to avoid lab() color issues
+                    const clonedElement = clonedDoc.querySelector('.print-letter')
+                    if (clonedElement) {
+                        // Remove any problematic gradient backgrounds
+                        const allElements = clonedElement.querySelectorAll('*')
+                        allElements.forEach((el: any) => {
+                            const computedStyle = window.getComputedStyle(el)
+                            if (computedStyle.backgroundColor && computedStyle.backgroundColor.includes('lab')) {
+                                el.style.backgroundColor = '#ffffff'
+                            }
+                        })
+                    }
+                }
             })
 
             const link = document.createElement('a')

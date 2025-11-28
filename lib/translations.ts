@@ -2,7 +2,7 @@ export type Language = 'en' | 'fil' | 'ceb'
 
 export const translations = {
     en: {
-        appTitle: 'Karapat Discount',
+        appTitle: 'Karapat Discount PH',
         appSubtitle: 'PWD & Senior Citizen Calculator',
         categories: {
             calculators: 'Calculators',
@@ -43,7 +43,7 @@ export const translations = {
         }
     },
     fil: {
-        appTitle: 'Karapat Discount',
+        appTitle: 'Karapat Discount PH',
         appSubtitle: 'Kalkulator para sa PWD at Senior Citizen',
         categories: {
             calculators: 'Mga Kalkulator',
@@ -84,7 +84,7 @@ export const translations = {
         }
     },
     ceb: {
-        appTitle: 'Karapat Discount',
+        appTitle: 'Karapat Discount PH',
         appSubtitle: 'Calculator para sa PWD ug Senior Citizen',
         categories: {
             calculators: 'Mga Calculator',

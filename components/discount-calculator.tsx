@@ -122,6 +122,19 @@ const CoverageLegalContent = () => (
       </div>
     </div>
 
+    <Separator />
+
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Badge className="bg-purple-100 text-purple-700 font-semibold">Legal Rights</Badge>
+        <h4 className="font-bold text-slate-900 text-base">Know Your Rights</h4>
+      </div>
+      <p className="text-sm text-slate-600">
+        Click on any card below to learn more about your legal rights and privileges as a PWD or Senior Citizen.
+      </p>
+      <RightsFlashcards />
+    </div>
+
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-t border-slate-200 pt-4 text-xs sm:text-sm text-slate-600">
       <p className="font-medium text-blue-600">Sources: RA 10754, RA 9994, RA 7581</p>
       <a
@@ -723,7 +736,7 @@ export function DiscountCalculator() {
 
           {/* Main App Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 tracking-tight">
-            Karapat Discount
+            Karapat Discount PH
           </h1>
 
           <h2 className="text-xl md:text-2xl font-bold text-slate-700 tracking-tight">
@@ -2686,7 +2699,7 @@ export function DiscountCalculator() {
 
               <CardFooter className="bg-slate-50 border-t p-4 md:p-6 lg:p-8 text-center">
                 <p className="text-xs sm:text-sm text-slate-500 w-full font-medium">
-                  Copyright © 2025 by Adrian Sian
+                  Copyright © 2025 by Garett
                 </p>
               </CardFooter>
             </Card>
@@ -2704,13 +2717,13 @@ export function DiscountCalculator() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-blue-900 uppercase tracking-wide">Why this exists</p>
-                  <h3 className="text-lg font-bold text-slate-900">Karapat Discount by Adrian Sian</h3>
+                  <h3 className="text-lg font-bold text-slate-900">Karapat Discount by Garett</h3>
                 </div>
               </div>
               <p className="text-sm leading-relaxed">
-                Adrian Sian built Karapat Discount for his girlfriend and every Filipino Senior or PWD who
+                Garett built Karapat Discount for his girlfriend and every Filipino Senior or PWD who
                 needs to double-check receipts, cite the right laws, and feel confident asking for the benefits they already
-                earned. The app bundles the math, legal references, and escalation tips Adrian wished were available whenever
+                earned. The app bundles the math, legal references, and escalation tips Garett wished were available whenever
                 establishments miscalculated discounts.
               </p>
               <p className="text-xs text-slate-500 italic">

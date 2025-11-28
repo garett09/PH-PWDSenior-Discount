@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Karapat Discount | PWD & Senior Citizen Discount Calculator',
+  title: 'Karapat Discount PH',
   description: 'Calculate discounts for senior citizens and persons with disability (PWD) in the Philippines. Get instant 20% discount and VAT exemption calculations based on Republic Act No. 10754.',
   generator: 'v0.app',
   viewport: {
@@ -19,20 +19,23 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: '/icon-32x32.png',
+        sizes: '32x32',
+        type: 'image/png',
       },
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
+        url: '/icon-64x64.png',
+        sizes: '64x64',
+        type: 'image/png',
       },
       {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
+        url: '/logo.png',
+        sizes: '256x256',
+        type: 'image/png',
       },
     ],
     apple: '/apple-icon.png',
-    shortcut: '/icon.svg',
+    shortcut: '/icon-64x64.png',
   },
 }
 
